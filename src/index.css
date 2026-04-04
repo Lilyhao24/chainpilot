@@ -1,13 +1,96 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 body {
   margin: 0;
   background: #0A0A0A;
   color: #ffffff;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   min-height: 100vh;
 }
 
 #root {
   min-height: 100vh;
+}
+
+/* Richard Mille mechanical font */
+.font-mechanical {
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.05em;
+}
+
+/* Glow text effects */
+.text-glow-red {
+  text-shadow: 0 0 20px rgba(255, 23, 68, 0.5), 0 0 40px rgba(255, 23, 68, 0.2);
+}
+
+.text-glow-orange {
+  text-shadow: 0 0 20px rgba(255, 145, 0, 0.5), 0 0 40px rgba(255, 145, 0, 0.2);
+}
+
+.text-glow-yellow {
+  text-shadow: 0 0 20px rgba(255, 214, 0, 0.5), 0 0 40px rgba(255, 214, 0, 0.2);
+}
+
+.text-glow-cyan {
+  text-shadow: 0 0 20px rgba(0, 229, 255, 0.5), 0 0 40px rgba(0, 229, 255, 0.2);
+}
+
+/* Accent colors */
+.accent-red { color: #ff1744; }
+.accent-orange { color: #ff9100; }
+.accent-yellow { color: #ffd600; }
+.accent-cyan { color: #00e5ff; }
+
+/* Data card style */
+.data-card {
+  background: linear-gradient(135deg, rgba(26, 26, 26, 0.8), rgba(15, 15, 15, 0.8));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+}
+
+/* Metric display */
+.metric-display {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Gear spin animation */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Grade badges */
+.grade-a { background: #1D9E75; color: #fff; }
+.grade-b { background: #BA7517; color: #fff; }
+.grade-c { background: #D85A30; color: #fff; }
+.grade-f { background: #E24B4A; color: #fff; }
+
+/* Pulse animation for live indicator */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; box-shadow: 0 0 4px currentColor; }
+  50% { opacity: 0.5; box-shadow: 0 0 8px currentColor; }
+}
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
 }

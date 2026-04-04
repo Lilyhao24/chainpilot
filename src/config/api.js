@@ -1,4 +1,5 @@
-const API_BASE = import.meta.env.DEV ? 'http://localhost:3000' : '';
+// In dev mode, call the deployed Vercel API (no local serverless runtime)
+const API_BASE = import.meta.env.DEV ? 'https://chainpilot-khaki.vercel.app' : '';
 
 export async function checkTokenSecurity(address, chainId = '1') {
   const res = await fetch(`${API_BASE}/api/goplus?address=${address}&chainId=${chainId}`);

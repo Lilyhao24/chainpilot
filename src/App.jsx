@@ -1,27 +1,63 @@
-import { ConnectButton } from '@rainbow-me/rainbowkit'
+import { useState } from 'react';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import Dashboard from './components/Dashboard';
+import Chat from './components/Chat';
 
 function App() {
+  const [lastScan, setLastScan] = useState(null);
+  const [scanCount, setScanCount] = useState(0);
+  const [blockCount, setBlockCount] = useState(0);
+
+  function handleScanComplete(safetyScore) {
+    setLastScan(safetyScore);
+    setScanCount((c) => c + 1);
+    if (safetyScore.grade === 'F') {
+      setBlockCount((c) => c + 1);
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white">
+    <div className="h-screen bg-[#0A0A0A] text-white flex flex-col overflow-hidden">
       {/* Top Bar */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
-        <h1 className="text-xl font-bold tracking-wider">CHAINPILOT</h1>
-        <div className="flex items-center gap-4">
-          <span className="text-xs text-gray-400">SAFE DEFI AGENT</span>
+      <header className="flex items-center justify-between px-6 py-3 border-b border-white/[0.06] shrink-0 bg-[#0D0D0D]">
+        <h1 className="font-mechanical text-2xl font-bold tracking-[0.3em] text-glow-red" style={{ color: '#ff1744' }}>
+          CHAINPILOT
+        </h1>
+        <div className="flex items-center gap-8">
+          <div className="hidden md:flex flex-col items-center">
+            <span className="font-mechanical text-sm tracking-[0.4em] text-gray-400 font-medium">
+              SAFE DEFI AGENT
+            </span>
+            <div className="flex items-center gap-4 mt-1 text-[9px] font-mechanical tracking-wider text-gray-600">
+              <span className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 pulse-glow" style={{ color: '#22c55e' }} />
+                REAL-TIME
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
+                PRECISION
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                SAFETY
+              </span>
+            </div>
+          </div>
           <ConnectButton />
         </div>
       </header>
 
-      {/* Main Content - Placeholder */}
-      <main className="flex items-center justify-center h-[calc(100vh-72px)]">
-        <div className="text-center">
-          <h2 className="text-4xl font-bold mb-4">ChainPilot</h2>
-          <p className="text-gray-400 mb-8">Safe DeFi Agent — Phase 1 Complete</p>
-          <ConnectButton />
-        </div>
-      </main>
+      {/* Main: Left Dashboard + Right Chat */}
+      <div className="flex flex-1 overflow-hidden">
+        <Dashboard
+          lastScan={lastScan}
+          scanCount={scanCount}
+          blockCount={blockCount}
+        />
+        <Chat onScanComplete={handleScanComplete} />
+      </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

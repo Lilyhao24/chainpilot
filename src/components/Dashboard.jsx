@@ -1,0 +1,231 @@
+/**
+ * Dashboard — Left 2/3 of the screen
+ * Richard Mille style: 4 gauge dials + gear decorations + metric cards + transactions
+ */
+
+import { useAccount, useBalance } from 'wagmi';
+import GaugeDial from './GaugeDial';
+
+const colorMap = {
+  red: '#ff1744',
+  yellow: '#ffd600',
+  orange: '#ff9100',
+  cyan: '#00e5ff',
+};
+
+// Gear decoration component
+function GearDecoration({ size = 50, color = 'red', speed = '20s' }) {
+  const c = colorMap[color];
+  const r = size / 2;
+  const teeth = 10;
+
+  return (
+    <svg
+      width={size} height={size}
+      viewBox={`${-r} ${-r} ${size} ${size}`}
+      style={{
+        animation: `spin ${speed} linear infinite`,
+        opacity: 0.15,
+        filter: `drop-shadow(0 0 6px ${c}40)`,
+      }}
+    >
+      {Array.from({ length: teeth }, (_, i) => {
+        const a1 = (i / teeth) * Math.PI * 2;
+        const a2 = ((i + 0.5) / teeth) * Math.PI * 2;
+        const outerR = r;
+        const innerR = r * 0.7;
+        return (
+          <path
+            key={i}
+            d={`M${Math.cos(a1)*outerR},${Math.sin(a1)*outerR} L${Math.cos(a2)*innerR},${Math.sin(a2)*innerR}`}
+            stroke={c} strokeWidth="2" fill="none"
+          />
+        );
+      })}
+      <circle cx="0" cy="0" r={r * 0.3} fill={c} opacity="0.3" />
+      <circle cx="0" cy="0" r={r * 0.5} fill="none" stroke={c} strokeWidth="1" opacity="0.3" strokeDasharray="3,3" />
+    </svg>
+  );
+}
+
+// Metric card component (adapted from Manus MetricCard)
+function MetricCard({ title, value, unit, change, color = 'red', positive = true }) {
+  const c = colorMap[color];
+  return (
+    <div
+      className="relative p-4 rounded-lg overflow-hidden backdrop-blur-sm"
+      style={{
+        background: 'linear-gradient(135deg, rgba(26,26,26,0.8), rgba(15,15,15,0.8))',
+        border: `1px solid ${c}25`,
+        boxShadow: `0 0 20px ${c}10, inset 0 0 20px ${c}05`,
+      }}
+    >
+      {/* Subtle background texture */}
+      <div className="absolute inset-0 opacity-5 pointer-events-none"
+        style={{
+          backgroundImage: `repeating-linear-gradient(90deg, transparent, transparent 1px, ${c}, ${c} 2px)`,
+          backgroundSize: '4px 100%',
+        }}
+      />
+      <div className="relative z-10">
+        <div className="font-mechanical text-[10px] uppercase tracking-[0.15em] text-gray-500 mb-2">
+          {title}
+        </div>
+        <div className="flex items-baseline gap-1.5 mb-1">
+          <span
+            className="font-mechanical text-2xl font-black tracking-tight"
+            style={{ color: c, textShadow: `0 0 10px ${c}60` }}
+          >
+            {value}
+          </span>
+          <span className="text-xs text-gray-600">{unit}</span>
+        </div>
+        <div className={`text-xs font-mechanical ${positive ? 'text-green-400' : 'text-red-400'}`}>
+          {positive ? '▲' : '▼'} {change}
+        </div>
+      </div>
+      {/* Bottom accent line */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-[1px]"
+        style={{ background: `linear-gradient(90deg, ${c}, transparent)`, opacity: 0.5 }}
+      />
+    </div>
+  );
+}
+
+const INFO_CARDS = [
+  { title: 'BTC/USD', value: '45,230', unit: '$', change: '+3.2%', color: 'yellow', positive: true },
+  { title: 'ETH/USD', value: '2,845', unit: '$', change: '+2.1%', color: 'orange', positive: true },
+  { title: 'MARKET CAP', value: '1.2', unit: 'T', change: '+1.5%', color: 'cyan', positive: true },
+  { title: 'PORTFOLIO VALUE', value: '245,680', unit: '$', change: '+12.4%', color: 'red', positive: true },
+];
+
+const DEMO_TRANSACTIONS = [
+  { type: 'BUY', token: 'USDC', detail: '284.50 USDC · 0.1 ETH', time: '2 mins ago' },
+  { type: 'SELL', token: 'ETH', detail: '2.0 ETH · $5,690', time: '15 mins ago' },
+  { type: 'BUY', token: 'PEPE', detail: '1,000,000 PEPE · $12.50', time: '1 hour ago' },
+];
+
+export default function Dashboard({ lastScan, scanCount = 0, blockCount = 0 }) {
+  const { address, isConnected } = useAccount();
+  const { data: balance } = useBalance({ address });
+
+  const ethDisplay = balance ? `${parseFloat(balance.formatted).toFixed(3)} ETH` : '0 ETH';
+
+  return (
+    <div className="flex-1 flex flex-col p-6 overflow-y-auto relative">
+      {/* Background grid pattern */}
+      <div className="fixed inset-0 opacity-[0.03] pointer-events-none">
+        <svg width="100%" height="100%">
+          <defs>
+            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="0.5" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#grid)" />
+        </svg>
+      </div>
+
+      <div className="relative z-10">
+        {/* 4 Gauge Dials */}
+        <div className="grid grid-cols-4 gap-6 mb-4">
+          <div className="flex justify-center relative">
+            <GaugeDial
+              label="WALLET"
+              value={isConnected ? (address?.slice(0,4) + '...' + address?.slice(-3)) : '—'}
+              subValue={isConnected ? ethDisplay : 'Connect Wallet'}
+              color="red"
+              fillPercent={isConnected ? 75 : 10}
+              icon="👛"
+            />
+          </div>
+          <div className="flex justify-center relative">
+            <GaugeDial
+              label="SECURITY ENGINE"
+              value="7/7"
+              subValue="ACTIVE"
+              color="orange"
+              fillPercent={100}
+              icon="🛡️"
+            />
+          </div>
+          <div className="flex justify-center relative">
+            <GaugeDial
+              label="LAST SCAN"
+              value={lastScan ? String(lastScan.total) : '—'}
+              subValue={lastScan ? `${scanCount} scans · ${blockCount} blocked` : 'No scans yet'}
+              color="yellow"
+              fillPercent={lastScan ? lastScan.total : 0}
+              badge={lastScan ? {
+                text: lastScan.grade,
+                bg: lastScan.grade === 'A' ? '#1D9E75' :
+                    lastScan.grade === 'B' ? '#BA7517' :
+                    lastScan.grade === 'C' ? '#D85A30' : '#E24B4A',
+                color: '#fff',
+              } : null}
+            />
+          </div>
+          <div className="flex justify-center relative">
+            <GaugeDial
+              label="MARKET"
+              value="2,845"
+              subValue="ETH/USD ↑2.1%"
+              color="cyan"
+              fillPercent={68}
+              icon="📈"
+            />
+          </div>
+        </div>
+
+        {/* Gear decorations row */}
+        <div className="flex justify-around items-center my-2 h-12">
+          <GearDecoration size={45} color="red" speed="30s" />
+          <GearDecoration size={35} color="orange" speed="20s" />
+          <GearDecoration size={45} color="yellow" speed="25s" />
+          <GearDecoration size={35} color="cyan" speed="15s" />
+        </div>
+
+        {/* 4 Info Cards */}
+        <div className="grid grid-cols-4 gap-3 mb-6">
+          {INFO_CARDS.map((card) => (
+            <MetricCard key={card.title} {...card} />
+          ))}
+        </div>
+
+        {/* Recent Transactions */}
+        <div className="data-card">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-mechanical text-xs tracking-[0.15em] text-glow-orange uppercase" style={{ color: '#ff9100' }}>
+              RECENT TRANSACTIONS
+            </h3>
+            <div className="w-2 h-2 rounded-full pulse-glow" style={{ backgroundColor: '#ff1744', color: '#ff1744' }} />
+          </div>
+
+          <div className="space-y-1">
+            {DEMO_TRANSACTIONS.map((tx, i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between py-2.5 border-b border-white/5 last:border-0"
+              >
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`font-mechanical text-[10px] font-bold px-2.5 py-1 rounded ${
+                      tx.type === 'BUY'
+                        ? 'bg-green-500/15 text-green-400'
+                        : 'bg-red-500/15 text-red-400'
+                    }`}
+                  >
+                    {tx.type}
+                  </span>
+                  <span className="text-sm text-white font-medium">{tx.token}</span>
+                </div>
+                <div className="text-xs text-gray-400 font-mechanical">{tx.detail}</div>
+                <div className="text-[10px] text-gray-600 font-mechanical">{tx.time}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
