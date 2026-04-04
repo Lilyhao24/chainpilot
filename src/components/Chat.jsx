@@ -1,12 +1,17 @@
 /**
  * Chat — Right 1/3 AI conversation sidebar
- * Intent parsing + quick action buttons + Gemini with Web3 context
+ * Intent parsing + quick actions + all card types
  */
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAccount } from 'wagmi';
 import { runSecurityScan } from '../engine/index.js';
 import { chatWithAI } from '../config/api.js';
+import SafetyScoreCard from './SafetyScoreCard.jsx';
+import SwapCard from './SwapCard.jsx';
+import ENSProfileCard from './ENSProfileCard.jsx';
+import BlockScreen from './BlockScreen.jsx';
+import CountdownTimer from './CountdownTimer.jsx';
 
 // Well-known token addresses
 const TOKEN_ADDRESSES = {
@@ -21,60 +26,51 @@ const TOKEN_ADDRESSES = {
   'PEPE': '0x6982508145454ce325ddbe47a25d4ec3d2311933',
 };
 
-// Quick action buttons
 const QUICK_ACTIONS = [
   { label: '🔍 查USDC安全', action: '帮我查USDC安全吗' },
   { label: '🐸 查PEPE安全', action: 'PEPE安全吗' },
   { label: '💱 买USDC', action: '用0.1 ETH买USDC' },
-  { label: '🔗 查vitalik.eth', action: 'vitalik.eth' },
+  { label: '🔗 vitalik.eth', action: 'vitalik.eth' },
 ];
 
-/**
- * Parse user intent from Chinese/English input
- */
+const WELCOME_MSG = {
+  role: 'ai', type: 'text',
+  content: '你好！我是 ChainPilot 安全助手 🛡️\n\n我可以帮你：\n• 检查代币是否安全\n• 在交易前做风险评估\n• 查询 ENS 域名信息\n• 回答 DeFi 和 Web3 问题\n\n试试下面的快捷按钮，或直接打字问我 👇',
+};
+
 function parseIntent(input) {
   const text = input.trim().toLowerCase();
 
-  // Intent 1: Safety check — needs explicit keywords
+  // Safety check — needs explicit keywords
   const safetyPattern = /(?:查|检查|安全|扫描|check|safe|scan|analyze|score)/i;
   if (safetyPattern.test(text)) {
     const tokenName = extractTokenName(input);
-    if (tokenName) {
-      return { type: 'safety_check', token: tokenName, address: TOKEN_ADDRESSES[tokenName] };
-    }
-    // Check for contract address
+    if (tokenName) return { type: 'safety_check', token: tokenName, address: TOKEN_ADDRESSES[tokenName] };
     const addrMatch = text.match(/0x[a-fA-F0-9]{40}/);
-    if (addrMatch) {
-      return { type: 'safety_check', token: 'Unknown', address: addrMatch[0] };
-    }
+    if (addrMatch) return { type: 'safety_check', token: 'Unknown', address: addrMatch[0] };
   }
 
-  // Pure contract address input
-  const addressMatch = text.match(/^0x[a-fA-F0-9]{40}$/);
-  if (addressMatch) {
-    return { type: 'safety_check', token: 'Unknown', address: addressMatch[0] };
+  // Pure address
+  if (/^0x[a-fA-F0-9]{40}$/.test(text)) {
+    return { type: 'safety_check', token: 'Unknown', address: text };
   }
 
-  // Intent 2: Swap/trade — needs buy/swap keywords
-  const swapPattern = /(?:买|换|swap|buy|交易|trade)/i;
-  if (swapPattern.test(text)) {
+  // Swap
+  if (/(?:买|换|swap|buy|交易|trade)/i.test(text)) {
     const amounts = text.match(/[\d.]+/);
     const tokenName = extractTokenName(input);
     return {
-      type: 'swap',
-      token: tokenName || 'USDC',
+      type: 'swap', token: tokenName || 'USDC',
       amount: amounts ? amounts[0] : '0.1',
       address: TOKEN_ADDRESSES[tokenName] || TOKEN_ADDRESSES['USDC'],
     };
   }
 
-  // Intent 3: ENS query
+  // ENS
   const ensMatch = input.match(/([a-zA-Z0-9-]+\.eth)/);
-  if (ensMatch) {
-    return { type: 'ens', name: ensMatch[1] };
-  }
+  if (ensMatch) return { type: 'ens', name: ensMatch[1] };
 
-  // Intent 4: General chat → Gemini with Web3 context
+  // General chat
   return { type: 'chat', message: input };
 }
 
@@ -86,127 +82,12 @@ function extractTokenName(input) {
   return null;
 }
 
-// Dimension labels
-const DIM_LABELS = {
-  honeypot: '蜜罐', tax: '税率', permissions: '合约权限',
-  verified: '验证', marketCap: '市值', holders: '持有者',
-};
-const DIM_MAX = {
-  honeypot: 30, tax: 15, permissions: 15, verified: 10, marketCap: 15, holders: 15,
-};
-
-/** Safety Score Card */
-function SafetyScoreCard({ result }) {
-  const { safetyScore, tokenName, tokenSymbol, gradeColor, mineSignals } = result;
-  const isGood = safetyScore.grade === 'A' || safetyScore.grade === 'B';
-  const borderColor = isGood ? '#00E676' : '#FF1744';
-
-  return (
-    <div
-      className="rounded-lg p-4 my-2"
-      style={{
-        border: `1px solid ${borderColor}40`,
-        background: `linear-gradient(135deg, ${borderColor}08, transparent)`,
-      }}
-    >
-      <div className="flex items-center gap-3 mb-2">
-        <span className="text-3xl font-bold font-mechanical" style={{ color: gradeColor.color }}>
-          {safetyScore.total}
-        </span>
-        <span
-          className="text-sm font-bold px-2 py-0.5 rounded"
-          style={{ backgroundColor: gradeColor.bg, color: gradeColor.color }}
-        >
-          {safetyScore.grade}
-        </span>
-      </div>
-      <div className="text-xs text-gray-400 mb-3">
-        {tokenSymbol} · {tokenName}
-      </div>
-      <div className="space-y-1.5">
-        {Object.entries(safetyScore.scores).map(([key, score]) => {
-          const max = DIM_MAX[key];
-          const pct = (score / max) * 100;
-          const barColor = pct >= 80 ? '#00E676' : pct >= 50 ? '#FFD600' : '#FF1744';
-          return (
-            <div key={key} className="flex items-center gap-2">
-              <span className="text-[10px] text-gray-400 w-16 truncate">{DIM_LABELS[key]}</span>
-              <div className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-700"
-                  style={{ width: `${pct}%`, backgroundColor: barColor }}
-                />
-              </div>
-              <span className="text-[10px] text-gray-500 w-10 text-right">{score}/{max}</span>
-            </div>
-          );
-        })}
-      </div>
-      {mineSignals && (
-        <div className="mt-3 pt-2 border-t border-gray-800/50">
-          {Object.entries(mineSignals).map(([key, signal]) => {
-            const icon = signal.level === 'safe' || signal.level === 'info' ? '✓' :
-                         signal.level === 'warn' || signal.level === 'warn_high' ? '⚠' : '✗';
-            const color = signal.level === 'safe' || signal.level === 'info' ? 'text-green-400' :
-                          signal.level === 'warn' || signal.level === 'warn_high' ? 'text-yellow-400' : 'text-red-400';
-            return (
-              <div key={key} className={`text-[10px] ${color} flex items-center gap-1`}>
-                <span>{icon}</span>
-                <span>{signal.reason}</span>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/** Swap Quote Card */
-function SwapCard({ token, amount }) {
-  const [confirmed, setConfirmed] = useState(false);
-  const rate = token === 'USDC' ? 2845 : token === 'PEPE' ? 0.0000125 : 1;
-  const outputAmount = (parseFloat(amount) * rate).toFixed(2);
-
-  return (
-    <div className="rounded-lg p-4 my-2 border border-cyan-500/30 bg-cyan-500/5">
-      <div className="text-sm font-medium text-white mb-2 font-mechanical">
-        <span className="text-gray-400">{amount} ETH</span>
-        <span className="mx-2 text-cyan-400">→</span>
-        <span className="text-cyan-400 font-bold">{outputAmount} {token}</span>
-      </div>
-      <div className="text-[10px] text-gray-400 space-y-0.5">
-        <div>滑点: 0.5%（由Safety Score自动设定）</div>
-        <div>授权: 精确授权110%（非无限授权）</div>
-      </div>
-      {!confirmed ? (
-        <button
-          onClick={() => setConfirmed(true)}
-          className="w-full mt-3 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm font-bold transition-colors"
-        >
-          确认交易
-        </button>
-      ) : (
-        <div className="mt-3 text-center text-xs text-green-400 py-2 border border-green-500/30 rounded-lg bg-green-500/10">
-          ✓ 交易已提交到钱包，请在 MetaMask 中确认签名
-        </div>
-      )}
-    </div>
-  );
-}
-
-/** Main Chat component */
 export default function Chat({ onScanComplete }) {
-  const [messages, setMessages] = useState([
-    {
-      role: 'ai',
-      type: 'text',
-      content: '你好！我是 ChainPilot 安全助手 🛡️\n\n我可以帮你：\n• 检查代币是否安全\n• 在交易前做风险评估\n• 回答 DeFi 和 Web3 问题\n\n试试下面的快捷按钮，或直接打字问我 👇',
-    },
-  ]);
+  const [messages, setMessages] = useState([WELCOME_MSG]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(true);
+  const [blockScreen, setBlockScreen] = useState(null); // F-grade block overlay
   const messagesEndRef = useRef(null);
   const { isConnected } = useAccount();
 
@@ -214,13 +95,25 @@ export default function Chat({ onScanComplete }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const addMessage = useCallback((msg) => {
+    setMessages((prev) => [...prev, msg]);
+  }, []);
+
+  const replaceLastMessage = useCallback((msg) => {
+    setMessages((prev) => {
+      const updated = [...prev];
+      updated[updated.length - 1] = msg;
+      return updated;
+    });
+  }, []);
+
   async function handleSend(overrideInput) {
     const userMessage = (overrideInput || input).trim();
     if (!userMessage || loading) return;
 
     setInput('');
     setShowQuickActions(false);
-    setMessages((prev) => [...prev, { role: 'user', type: 'text', content: userMessage }]);
+    addMessage({ role: 'user', type: 'text', content: userMessage });
     setLoading(true);
 
     try {
@@ -229,64 +122,66 @@ export default function Chat({ onScanComplete }) {
       switch (intent.type) {
         case 'safety_check': {
           if (!intent.address) {
-            setMessages((prev) => [...prev, {
-              role: 'ai', type: 'text',
-              content: `我不认识「${intent.token}」这个代币。请提供合约地址（0x...）我来帮你查。`,
-            }]);
+            addMessage({ role: 'ai', type: 'text', content: `我不认识「${intent.token}」，请提供合约地址（0x...）。` });
             break;
           }
-          setMessages((prev) => [...prev, {
-            role: 'ai', type: 'text', content: `🔍 正在扫描 ${intent.token}，请稍候...`,
-          }]);
+          addMessage({ role: 'ai', type: 'text', content: `🔍 正在扫描 ${intent.token}...` });
+
           const result = await runSecurityScan(intent.address);
-          setMessages((prev) => {
-            const updated = [...prev];
-            updated[updated.length - 1] = { role: 'ai', type: 'safety_card', result };
-            return updated;
-          });
+          replaceLastMessage({ role: 'ai', type: 'safety_card', result });
           onScanComplete?.(result.safetyScore);
+
+          // If F grade, show block screen
+          if (result.safetyScore.grade === 'F') {
+            setBlockScreen(result);
+          }
           break;
         }
 
         case 'swap': {
           if (!isConnected) {
-            setMessages((prev) => [...prev, {
-              role: 'ai', type: 'text',
-              content: '⚠️ 请先连接钱包后再进行交易。点击右上角的连接按钮。',
-            }]);
+            addMessage({ role: 'ai', type: 'text', content: '⚠️ 请先连接钱包。点击右上角的连接按钮。' });
             break;
           }
-          setMessages((prev) => [...prev, {
-            role: 'ai', type: 'text',
-            content: `🔍 交易前先检查 ${intent.token} 安全性...`,
-          }]);
+          addMessage({ role: 'ai', type: 'text', content: `🔍 交易前先检查 ${intent.token} 安全性...` });
+
           if (intent.address) {
             const result = await runSecurityScan(intent.address);
-            setMessages((prev) => {
-              const updated = [...prev];
-              updated[updated.length - 1] = { role: 'ai', type: 'safety_card', result };
-              return updated;
-            });
+            replaceLastMessage({ role: 'ai', type: 'safety_card', result });
             onScanComplete?.(result.safetyScore);
-            if (result.safetyScore.grade !== 'F') {
-              setMessages((prev) => [...prev, {
-                role: 'ai', type: 'swap_card', token: intent.token, amount: intent.amount,
-              }]);
+
+            if (result.safetyScore.grade === 'F') {
+              setBlockScreen(result);
+              addMessage({ role: 'ai', type: 'text', content: '🚫 该代币被评为F级，交易已被拦截。' });
             } else {
-              setMessages((prev) => [...prev, {
-                role: 'ai', type: 'text',
-                content: '🚫 该代币被评为F级，交易已被拦截。ChainPilot 不会让你买入高风险代币。',
-              }]);
+              // Determine cooldown: C=5min, B+warn=3min, A=none
+              const hasWarn = result.mineSignals && Object.values(result.mineSignals).some(
+                s => s.level === 'warn' || s.level === 'warn_high'
+              );
+              let cooldown = 0;
+              if (result.safetyScore.grade === 'C') cooldown = 300;
+              else if (result.safetyScore.grade === 'B' && hasWarn) cooldown = 180;
+
+              if (cooldown > 0) {
+                addMessage({
+                  role: 'ai', type: 'countdown',
+                  seconds: cooldown,
+                  label: result.safetyScore.grade === 'C' ? '高风险冷却期（5分钟）' : '中风险冷却期（3分钟）',
+                  pendingSwap: { token: intent.token, amount: intent.amount, slippage: result.slippage },
+                });
+              } else {
+                addMessage({
+                  role: 'ai', type: 'swap_card',
+                  token: intent.token, amount: intent.amount, slippage: result.slippage,
+                });
+              }
             }
           }
           break;
         }
 
         case 'ens': {
-          setMessages((prev) => [...prev, {
-            role: 'ai', type: 'text',
-            content: `🔗 ENS查询功能即将上线。你查询的是：${intent.name}`,
-          }]);
+          addMessage({ role: 'ai', type: 'ens_card', name: intent.name });
           break;
         }
 
@@ -294,24 +189,18 @@ export default function Chat({ onScanComplete }) {
         default: {
           try {
             const reply = await chatWithAI(userMessage);
-            setMessages((prev) => [...prev, {
-              role: 'ai', type: 'text', content: reply,
-            }]);
+            addMessage({ role: 'ai', type: 'text', content: reply });
           } catch {
-            // Fallback if Gemini fails
-            setMessages((prev) => [...prev, {
+            addMessage({
               role: 'ai', type: 'text',
-              content: '我是 ChainPilot 安全助手，专注于 DeFi 安全检查。\n\n你可以试试：\n• 「USDC安全吗」检查代币\n• 「用0.1 ETH买USDC」发起交易\n• 或输入合约地址（0x...）直接扫描',
-            }]);
+              content: '我是 ChainPilot 安全助手。\n\n你可以试试：\n• 「USDC安全吗」检查代币\n• 「用0.1 ETH买USDC」发起交易\n• 「vitalik.eth」查询ENS\n• 或输入合约地址直接扫描',
+            });
           }
           break;
         }
       }
     } catch (error) {
-      setMessages((prev) => [...prev, {
-        role: 'ai', type: 'text',
-        content: `出错了：${error.message}。请稍后重试。`,
-      }]);
+      addMessage({ role: 'ai', type: 'text', content: `出错了：${error.message}` });
     } finally {
       setLoading(false);
     }
@@ -324,12 +213,19 @@ export default function Chat({ onScanComplete }) {
     }
   }
 
-  function handleQuickAction(action) {
-    handleSend(action);
+  function resetChat() {
+    setMessages([WELCOME_MSG]);
+    setShowQuickActions(true);
+    setBlockScreen(null);
   }
 
   return (
-    <div className="w-[380px] min-w-[380px] border-l border-white/[0.06] flex flex-col bg-[#0D0D0D]">
+    <div className="w-[380px] min-w-[380px] border-l border-white/[0.06] flex flex-col bg-[#0D0D0D] relative">
+      {/* Block Screen Overlay */}
+      {blockScreen && (
+        <BlockScreen result={blockScreen} onDismiss={() => setBlockScreen(null)} />
+      )}
+
       {/* Header */}
       <div className="px-4 py-3 border-b border-white/[0.06] flex items-center justify-between">
         <div>
@@ -339,13 +235,7 @@ export default function Chat({ onScanComplete }) {
           <div className="w-12 h-[1px] mt-1" style={{ background: 'linear-gradient(90deg, #ff1744, transparent)' }} />
         </div>
         <button
-          onClick={() => {
-            setMessages([{
-              role: 'ai', type: 'text',
-              content: '你好！我是 ChainPilot 安全助手 🛡️\n\n我可以帮你：\n• 检查代币是否安全\n• 在交易前做风险评估\n• 回答 DeFi 和 Web3 问题\n\n试试下面的快捷按钮，或直接打字问我 👇',
-            }]);
-            setShowQuickActions(true);
-          }}
+          onClick={resetChat}
           className="text-[10px] text-gray-500 hover:text-white border border-white/10 hover:border-white/30 px-2 py-1 rounded transition-all"
         >
           🔄 新对话
@@ -357,32 +247,41 @@ export default function Chat({ onScanComplete }) {
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             {msg.type === 'text' && (
-              <div
-                className={`max-w-[90%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap ${
-                  msg.role === 'user'
-                    ? 'bg-[#2A2A2A] text-white'
-                    : 'bg-transparent text-gray-300'
-                }`}
-              >
+              <div className={`max-w-[90%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap ${
+                msg.role === 'user' ? 'bg-[#2A2A2A] text-white' : 'bg-transparent text-gray-300'
+              }`}>
                 {msg.content}
               </div>
             )}
-            {msg.type === 'safety_card' && (
-              <div className="w-full"><SafetyScoreCard result={msg.result} /></div>
-            )}
-            {msg.type === 'swap_card' && (
-              <div className="w-full"><SwapCard token={msg.token} amount={msg.amount} /></div>
+            {msg.type === 'safety_card' && <div className="w-full"><SafetyScoreCard result={msg.result} /></div>}
+            {msg.type === 'swap_card' && <div className="w-full"><SwapCard token={msg.token} amount={msg.amount} slippage={msg.slippage} /></div>}
+            {msg.type === 'ens_card' && <div className="w-full"><ENSProfileCard name={msg.name} /></div>}
+            {msg.type === 'countdown' && (
+              <div className="w-full">
+                <div className="rounded-lg p-4 my-2 border border-orange-500/20 bg-orange-500/5 text-center">
+                  <div className="text-xs text-orange-400 mb-2 font-mechanical">⏱ 冷却期 — 请等待倒计时结束后确认交易</div>
+                  <CountdownTimer
+                    seconds={msg.seconds}
+                    label={msg.label}
+                    onComplete={() => {
+                      // Replace countdown message with swap card
+                      setMessages(prev => prev.map((m, idx) =>
+                        idx === i ? { role: 'ai', type: 'swap_card', ...msg.pendingSwap } : m
+                      ));
+                    }}
+                  />
+                </div>
+              </div>
             )}
           </div>
         ))}
 
-        {/* Quick action buttons — show at start or after conversation settles */}
         {showQuickActions && !loading && (
           <div className="flex flex-wrap gap-2 mt-2">
             {QUICK_ACTIONS.map((qa) => (
               <button
                 key={qa.label}
-                onClick={() => handleQuickAction(qa.action)}
+                onClick={() => handleSend(qa.action)}
                 className="text-[11px] px-3 py-1.5 rounded-full border border-white/10 text-gray-400 hover:text-white hover:border-white/30 hover:bg-white/5 transition-all"
               >
                 {qa.label}
