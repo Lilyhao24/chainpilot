@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit'
 import { getDefaultConfig } from '@rainbow-me/rainbowkit'
 import { mainnet, sepolia } from 'wagmi/chains'
+import { http } from 'wagmi'
 import '@rainbow-me/rainbowkit/styles.css'
 import './index.css'
 import App from './App.jsx'
@@ -13,6 +14,10 @@ const config = getDefaultConfig({
   appName: 'ChainPilot',
   projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || 'demo',
   chains: [mainnet, sepolia],
+  transports: {
+    [mainnet.id]: http('https://1rpc.io/eth'),
+    [sepolia.id]: http('https://rpc.sepolia.org'),
+  },
 })
 
 const queryClient = new QueryClient()
