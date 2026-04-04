@@ -1,10 +1,40 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
+/* ── Manus CSS Variable System (exact copy) ── */
+:root {
+  --radius: 0.75rem;
+  --background: oklch(0.13 0.005 260);
+  --foreground: oklch(0.95 0.005 260);
+  --card: oklch(0.17 0.005 260);
+  --card-foreground: oklch(0.92 0.005 260);
+  --popover: oklch(0.17 0.005 260);
+  --popover-foreground: oklch(0.92 0.005 260);
+  --primary: #1D9E75;
+  --primary-foreground: #ffffff;
+  --secondary: oklch(0.22 0.005 260);
+  --secondary-foreground: oklch(0.90 0.005 260);
+  --muted: oklch(0.22 0.005 260);
+  --muted-foreground: oklch(0.60 0.005 260);
+  --accent: oklch(0.22 0.01 260);
+  --accent-foreground: oklch(0.90 0.005 260);
+  --destructive: #E24B4A;
+  --destructive-foreground: #ffffff;
+  --border: oklch(0.22 0.005 260);
+  --input: oklch(0.17 0.005 260);
+  --ring: #1D9E75;
+  --cp-safe: #1D9E75;
+  --cp-warn: #BA7517;
+  --cp-danger: #E24B4A;
+  --cp-orange: #D85A30;
+  --cp-info: #3B82F6;
+  --cp-gold: #C9A962;
+}
+
 body {
   margin: 0;
-  background: #0A0A0A;
-  color: #ffffff;
+  background: var(--background);
+  color: var(--foreground);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   min-height: 100vh;
 }
@@ -13,13 +43,30 @@ body {
   min-height: 100vh;
 }
 
-/* Richard Mille mechanical font */
+/* ── Manus Font Utilities (exact copy) ── */
 .font-mechanical {
   font-family: 'JetBrains Mono', monospace;
   letter-spacing: 0.05em;
 }
 
-/* Glow text effects */
+.font-mono-code {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.font-heading {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.metric-display {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* ── Manus Glow Effects (exact copy) ── */
 .text-glow-red {
   text-shadow: 0 0 20px rgba(255, 23, 68, 0.5), 0 0 40px rgba(255, 23, 68, 0.2);
 }
@@ -36,111 +83,98 @@ body {
   text-shadow: 0 0 20px rgba(0, 229, 255, 0.5), 0 0 40px rgba(0, 229, 255, 0.2);
 }
 
-/* Accent colors */
-.accent-red { color: #ff1744; }
-.accent-orange { color: #ff9100; }
-.accent-yellow { color: #ffd600; }
-.accent-cyan { color: #00e5ff; }
+/* ── Manus Card (exact copy) ── */
+.cp-card {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--card);
+}
 
-/* Data card style */
+/* ── Manus Data Card ── */
 .data-card {
   background: linear-gradient(135deg, rgba(26, 26, 26, 0.8), rgba(15, 15, 15, 0.8));
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 20px;
   backdrop-filter: blur(10px);
 }
 
-/* Metric display */
-.metric-display {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 2rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 4px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-/* Gear spin animation */
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* Grade badges */
+/* ── Manus Grade Badges (exact copy) ── */
 .grade-a { background: #1D9E75; color: #fff; }
 .grade-b { background: #BA7517; color: #fff; }
 .grade-c { background: #D85A30; color: #fff; }
 .grade-f { background: #E24B4A; color: #fff; }
 
-/* ChainPilot unified card */
-.cp-card {
-  position: relative;
-  border-radius: 12px;
-  overflow: hidden;
-  background: rgba(23, 23, 30, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-/* Semantic color utilities */
+/* ── Manus Semantic Colors (exact copy) ── */
 .text-safe { color: #1D9E75; }
 .text-warn { color: #BA7517; }
 .text-danger { color: #E24B4A; }
 .text-cp-orange { color: #D85A30; }
 .text-cp-info { color: #3B82F6; }
+.text-gold { color: #C9A962; }
 .bg-safe { background-color: #1D9E75; }
 .bg-warn { background-color: #BA7517; }
 .bg-danger { background-color: #E24B4A; }
+.bg-cp-orange { background-color: #D85A30; }
+.bg-cp-info { background-color: #3B82F6; }
 .border-safe { border-color: #1D9E75; }
 .border-warn { border-color: #BA7517; }
 .border-danger { border-color: #E24B4A; }
+.border-cp-orange { border-color: #D85A30; }
 .glow-safe { box-shadow: 0 0 20px rgba(29, 158, 117, 0.3); }
 .glow-danger { box-shadow: 0 0 20px rgba(226, 75, 74, 0.3); }
 .glow-warn { box-shadow: 0 0 20px rgba(186, 117, 23, 0.3); }
 
-/* Monospace code font */
-.font-mono-code {
-  font-family: 'JetBrains Mono', monospace;
+/* ── Manus Status Indicators (exact copy) ── */
+.status-active { color: #1D9E75; }
+.status-warn { color: #BA7517; }
+.status-danger { color: #E24B4A; }
+.status-info { color: #3B82F6; }
+
+/* ── Accent colors ── */
+.accent-red { color: #ff1744; }
+.accent-orange { color: #ff9100; }
+.accent-yellow { color: #ffd600; }
+.accent-cyan { color: #00e5ff; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+
+/* ── Animations ── */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-/* Fade in animation for tooltips */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Card slide-up entrance */
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
 .animate-slide-up {
   animation: slideUp 0.4s ease-out both;
 }
 
-/* Staggered entrance delays */
-.animate-delay-1 { animation-delay: 0.05s; }
-.animate-delay-2 { animation-delay: 0.1s; }
-.animate-delay-3 { animation-delay: 0.15s; }
-
-/* Skeleton shimmer for loading states */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
+
 .skeleton {
   background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
   background-size: 200% 100%;
@@ -148,11 +182,20 @@ body {
   border-radius: 6px;
 }
 
-/* Pulse animation for live indicator */
 @keyframes pulse-glow {
   0%, 100% { opacity: 1; box-shadow: 0 0 4px currentColor; }
   50% { opacity: 0.5; box-shadow: 0 0 8px currentColor; }
 }
+
 .pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes countdown-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-countdown {
+  animation: countdown-pulse 1s ease-in-out infinite;
 }

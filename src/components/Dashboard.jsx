@@ -17,81 +17,52 @@ const colorMap = {
   cyan: '#00e5ff',
 };
 
-// Gear decoration component
-function GearDecoration({ size = 50, color = 'red', speed = '20s' }) {
-  const c = colorMap[color];
-  const r = size / 2;
-  const teeth = 10;
-
-  return (
-    <svg
-      width={size} height={size}
-      viewBox={`${-r} ${-r} ${size} ${size}`}
-      style={{
-        animation: `spin ${speed} linear infinite`,
-        opacity: 0.15,
-        filter: `drop-shadow(0 0 6px ${c}40)`,
-      }}
-    >
-      {Array.from({ length: teeth }, (_, i) => {
-        const a1 = (i / teeth) * Math.PI * 2;
-        const a2 = ((i + 0.5) / teeth) * Math.PI * 2;
-        const outerR = r;
-        const innerR = r * 0.7;
-        return (
-          <path
-            key={i}
-            d={`M${Math.cos(a1)*outerR},${Math.sin(a1)*outerR} L${Math.cos(a2)*innerR},${Math.sin(a2)*innerR}`}
-            stroke={c} strokeWidth="2" fill="none"
-          />
-        );
-      })}
-      <circle cx="0" cy="0" r={r * 0.3} fill={c} opacity="0.3" />
-      <circle cx="0" cy="0" r={r * 0.5} fill="none" stroke={c} strokeWidth="1" opacity="0.3" strokeDasharray="3,3" />
-    </svg>
-  );
-}
+/* GearDecoration removed — gears are now inside GaugeDial (Manus style) */
 
 // Metric card component (adapted from Manus MetricCard)
+/* MetricCard — Manus exact structure */
 function MetricCard({ title, value, unit, change, color = 'red', positive = true }) {
   const c = colorMap[color];
+  const trendColor = positive ? '#00ff00' : '#ff1744';
+
   return (
     <div
-      className="relative p-5 rounded-lg overflow-hidden backdrop-blur-sm"
+      className="relative p-4 rounded-lg overflow-hidden backdrop-blur-sm"
       style={{
-        background: 'linear-gradient(135deg, rgba(26,26,26,0.8), rgba(15,15,15,0.8))',
+        background: 'linear-gradient(135deg, rgba(26, 26, 26, 0.8), rgba(15, 15, 15, 0.8))',
         border: `1px solid ${c}40`,
         boxShadow: `0 0 20px ${c}20, inset 0 0 20px ${c}05`,
       }}
     >
-      {/* Background texture */}
-      <div className="absolute inset-0 opacity-10 pointer-events-none"
+      {/* Background Texture */}
+      <div
+        className="absolute inset-0 opacity-10 pointer-events-none"
         style={{
           backgroundImage: `repeating-linear-gradient(90deg, transparent, transparent 1px, ${c}, ${c} 2px)`,
-          backgroundSize: '4px 100%',
         }}
       />
+      {/* Content */}
       <div className="relative z-10">
-        <div className="font-mechanical text-xs uppercase tracking-widest text-gray-400 mb-3">
-          {title}
+        {/* Header */}
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-mechanical text-xs uppercase tracking-widest" style={{ color: 'var(--muted-foreground)', opacity: 0.7 }}>
+            {title}
+          </h3>
         </div>
+        {/* Value */}
         <div className="flex items-baseline gap-2 mb-2">
-          <span
-            className="font-black text-3xl tracking-tight"
-            style={{ color: c, textShadow: `0 0 10px ${c}60`, fontFamily: "'JetBrains Mono', monospace" }}
-          >
+          <div className="font-black text-2xl tracking-tight" style={{ color: c, textShadow: `0 0 10px ${c}60` }}>
             {value}
-          </span>
-          <span className="text-sm text-gray-500">{unit}</span>
+          </div>
+          {unit && <span className="text-xs" style={{ color: 'var(--muted-foreground)', opacity: 0.6 }}>{unit}</span>}
         </div>
-        <div className={`text-sm font-mechanical tracking-wider ${positive ? 'text-green-400' : 'text-red-400'}`}>
+        {/* Change Indicator */}
+        <div className="text-xs font-mechanical tracking-wider" style={{ color: trendColor }}>
           {positive ? '↑ ' : '↓ '}{change}
         </div>
       </div>
-      {/* Bottom accent line */}
-      <div className="absolute bottom-0 left-0 right-0 h-[2px]"
-        style={{ background: `linear-gradient(90deg, ${c}, transparent)`, opacity: 0.6 }}
-      />
+      {/* Accent Line */}
+      <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ background: `linear-gradient(90deg, ${c}, transparent)`, opacity: 0.6 }} />
     </div>
   );
 }
@@ -163,7 +134,7 @@ export default function Dashboard({ lastScan, scanCount = 0, blockCount = 0, sca
 
       <div className="relative z-10">
         {/* 4 Gauge Dials */}
-        <div className="grid grid-cols-4 gap-6 mb-4" style={{ animation: 'fadeIn 0.6s ease-out' }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8" style={{ animation: 'fadeIn 0.6s ease-out' }}>
           <div className="flex justify-center relative">
             <GaugeDial
               label={t.wallet}
@@ -245,16 +216,11 @@ export default function Dashboard({ lastScan, scanCount = 0, blockCount = 0, sca
           </div>
         )}
 
-        {/* Gear decorations row */}
-        <div className="flex justify-around items-center my-2 h-12">
-          <GearDecoration size={45} color="red" speed="30s" />
-          <GearDecoration size={35} color="orange" speed="20s" />
-          <GearDecoration size={45} color="yellow" speed="25s" />
-          <GearDecoration size={35} color="cyan" speed="15s" />
-        </div>
+        {/* Spacer between dials and cards */}
+        <div className="h-4" />
 
-        {/* 4 Info Cards */}
-        <div className="grid grid-cols-4 gap-3 mb-6">
+        {/* Data Cards Section (Manus: grid-cols-4 gap-4) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {INFO_CARDS.map((card, i) => (
             <div key={card.title} className="animate-slide-up" style={{ animationDelay: `${0.1 + i * 0.06}s` }}>
               <MetricCard {...card} />
