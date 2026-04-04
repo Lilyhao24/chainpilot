@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { useAccount, useBalance, useEnsName, useEnsAvatar } from 'wagmi';
 import GaugeDial from './GaugeDial';
+import { WalletPanel, SecurityPanel, ScanPanel, MarketPanel } from './DialPanels.jsx';
 
 const colorMap = {
   red: '#ff1744',
@@ -116,32 +117,15 @@ const TOOLTIPS = {
   market: '关注币种的实时价格。点击切换币种或添加新关注。',
 };
 
-// 7 security rules for detail panel
-const SECURITY_RULES = [
-  { id: 1, name: '蜜罐拦截', desc: 'GoPlus检测到蜜罐代币自动拦截交易', status: 'active' },
-  { id: 2, name: '假代币检测', desc: '三层验证：GoPlus + 官方地址 + CoinGecko符号交叉', status: 'active' },
-  { id: 3, name: '大额保护', desc: '交易超过资产80%自动拦截', status: 'active' },
-  { id: 4, name: '动态滑点', desc: 'A级0.5% / B级1% / C级1%（上限3-5%）', status: 'active' },
-  { id: 5, name: 'MEV防护', desc: '始终启用，防止三明治攻击', status: 'active' },
-  { id: 6, name: 'Gas异常检测', desc: 'Gas费异常偏高时警告', status: 'active' },
-  { id: 7, name: '授权金额限制', desc: 'approve = 交易额 × 110%，非无限授权', status: 'active' },
-];
-
-const MARKET_TOKENS = [
-  { symbol: 'ETH', name: 'Ethereum', price: '2,845', change: '+2.1%', positive: true },
-  { symbol: 'BTC', name: 'Bitcoin', price: '45,230', change: '+3.2%', positive: true },
-  { symbol: 'USDC', name: 'USD Coin', price: '1.00', change: '0.0%', positive: true },
-  { symbol: 'PEPE', name: 'Pepe', price: '0.0000125', change: '+15.3%', positive: true },
-  { symbol: 'UNI', name: 'Uniswap', price: '14.23', change: '-1.2%', positive: false },
-  { symbol: 'LINK', name: 'Chainlink', price: '16.74', change: '+0.8%', positive: true },
-];
-
 export default function Dashboard({ lastScan, scanCount = 0, blockCount = 0, scanHistory = [] }) {
   const { address, isConnected } = useAccount();
   const { data: balance } = useBalance({ address });
   const { data: ensName } = useEnsName({ address });
   const { data: ensAvatar } = useEnsAvatar({ name: ensName });
-  const [activePanel, setActivePanel] = useState(null); // 'wallet' | 'security' | 'scan' | 'market' | null
+  const [activePanel, setActivePanel] = useState(null);
+  const [securitySettings, setSecuritySettings] = useState({
+    largeThreshold: 80, cooldownC: 300, cooldownB: 180, mevEnabled: true,
+  });
 
   const ethDisplay = balance ? `${parseFloat(balance.formatted).toFixed(3)} ETH` : '0 ETH';
   const walletDisplay = ensName || (address ? `${address.slice(0,4)}...${address.slice(-3)}` : '—');
@@ -243,110 +227,10 @@ export default function Dashboard({ lastScan, scanCount = 0, blockCount = 0, sca
               <button onClick={() => setActivePanel(null)} className="text-gray-500 hover:text-white text-xs transition-colors">✕</button>
             </div>
 
-            {/* Wallet Panel */}
-            {activePanel === 'wallet' && (
-              <div className="p-4 space-y-3">
-                {isConnected ? (
-                  <>
-                    <div className="flex items-center gap-3">
-                      {ensAvatar && <img src={ensAvatar} alt="" className="w-10 h-10 rounded-full border border-red-500/30" />}
-                      <div>
-                        <div className="text-white font-mechanical font-bold">{ensName || '无ENS名称'}</div>
-                        <div className="text-[10px] text-gray-500 font-mechanical">{address}</div>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-white/[0.03] rounded p-3">
-                        <div className="text-[10px] text-gray-500 font-mechanical">ETH余额</div>
-                        <div className="text-lg font-mechanical font-bold" style={{ color: '#ff1744' }}>{ethDisplay}</div>
-                      </div>
-                      <div className="bg-white/[0.03] rounded p-3">
-                        <div className="text-[10px] text-gray-500 font-mechanical">ENS身份</div>
-                        <div className="text-sm font-mechanical" style={{ color: ensName ? '#1D9E75' : '#666' }}>
-                          {ensName ? `✓ ${ensName}` : '未设置'}
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-center py-4 text-gray-500 text-sm">请先连接钱包</div>
-                )}
-              </div>
-            )}
-
-            {/* Security Engine Panel */}
-            {activePanel === 'security' && (
-              <div className="p-4 space-y-2">
-                {SECURITY_RULES.map(rule => (
-                  <div key={rule.id} className="flex items-center gap-3 py-2 border-b border-white/[0.04] last:border-0">
-                    <span className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center text-green-400 text-[10px]">✓</span>
-                    <div className="flex-1">
-                      <div className="text-xs text-white font-mechanical">{rule.id}. {rule.name}</div>
-                      <div className="text-[10px] text-gray-500">{rule.desc}</div>
-                    </div>
-                    <span className="text-[9px] px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 font-mechanical">ACTIVE</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Scan History Panel */}
-            {activePanel === 'scan' && (
-              <div className="p-4">
-                <div className="grid grid-cols-3 gap-3 mb-4">
-                  <div className="bg-white/[0.03] rounded p-3 text-center">
-                    <div className="text-[10px] text-gray-500 font-mechanical">总扫描</div>
-                    <div className="text-xl font-mechanical font-bold text-yellow-400">{scanCount}</div>
-                  </div>
-                  <div className="bg-white/[0.03] rounded p-3 text-center">
-                    <div className="text-[10px] text-gray-500 font-mechanical">已拦截</div>
-                    <div className="text-xl font-mechanical font-bold text-red-400">{blockCount}</div>
-                  </div>
-                  <div className="bg-white/[0.03] rounded p-3 text-center">
-                    <div className="text-[10px] text-gray-500 font-mechanical">最新评分</div>
-                    <div className="text-xl font-mechanical font-bold" style={{ color: lastScan ? (lastScan.grade === 'A' ? '#1D9E75' : lastScan.grade === 'B' ? '#BA7517' : '#E24B4A') : '#666' }}>
-                      {lastScan ? `${lastScan.total} ${lastScan.grade}` : '—'}
-                    </div>
-                  </div>
-                </div>
-                {scanHistory.length > 0 ? (
-                  <div className="space-y-1">
-                    {scanHistory.map((scan, i) => (
-                      <div key={i} className="flex items-center justify-between py-2 border-b border-white/[0.04] last:border-0">
-                        <span className="text-xs text-white font-mechanical">{scan.symbol}</span>
-                        <span className="text-xs font-mechanical" style={{ color: scan.grade === 'A' ? '#1D9E75' : scan.grade === 'B' ? '#BA7517' : scan.grade === 'C' ? '#D85A30' : '#E24B4A' }}>
-                          {scan.total} {scan.grade}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center text-gray-600 text-[11px] py-2">在右侧聊天中输入代币名称开始扫描</div>
-                )}
-              </div>
-            )}
-
-            {/* Market Watchlist Panel */}
-            {activePanel === 'market' && (
-              <div className="p-4">
-                <div className="space-y-1">
-                  {MARKET_TOKENS.map(token => (
-                    <div key={token.symbol} className="flex items-center justify-between py-2.5 border-b border-white/[0.04] last:border-0">
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm font-mechanical font-bold text-white">{token.symbol}</span>
-                        <span className="text-[10px] text-gray-500">{token.name}</span>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm text-white font-mechanical">${token.price}</div>
-                        <div className={`text-[10px] font-mechanical ${token.positive ? 'text-green-400' : 'text-red-400'}`}>
-                          {token.positive ? '▲' : '▼'} {token.change}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            {activePanel === 'wallet' && <WalletPanel />}
+            {activePanel === 'security' && <SecurityPanel settings={securitySettings} onSettingsChange={setSecuritySettings} />}
+            {activePanel === 'scan' && <ScanPanel scanCount={scanCount} blockCount={blockCount} lastScan={lastScan} scanHistory={scanHistory} />}
+            {activePanel === 'market' && <MarketPanel />}
           </div>
         )}
 

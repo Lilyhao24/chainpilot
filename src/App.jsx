@@ -16,8 +16,11 @@ function App() {
       setBlockCount((c) => c + 1);
     }
     setScanHistory((prev) => [
-      { total: safetyScore.total, grade: safetyScore.grade, symbol: safetyScore.symbol || '??' },
-      ...prev.slice(0, 9), // Keep last 10
+      {
+        total: safetyScore.total, grade: safetyScore.grade, symbol: safetyScore.symbol || '??',
+        time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+      },
+      ...prev.slice(0, 19), // Keep last 20
     ]);
   }
 

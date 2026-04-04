@@ -129,7 +129,7 @@ export default function Chat({ onScanComplete }) {
 
           const result = await runSecurityScan(intent.address);
           replaceLastMessage({ role: 'ai', type: 'safety_card', result });
-          onScanComplete?.(result.safetyScore);
+          onScanComplete?.({ ...result.safetyScore, symbol: result.tokenSymbol });
 
           // If F grade, show block screen
           if (result.safetyScore.grade === 'F') {
@@ -157,7 +157,7 @@ export default function Chat({ onScanComplete }) {
           if (intent.address) {
             const result = await runSecurityScan(intent.address);
             replaceLastMessage({ role: 'ai', type: 'safety_card', result });
-            onScanComplete?.(result.safetyScore);
+            onScanComplete?.({ ...result.safetyScore, symbol: result.tokenSymbol });
 
             // Gemini rephrase in background
             rephraseRisk(result).then((rephrased) => {
