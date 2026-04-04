@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import Dashboard from './components/Dashboard';
 import Chat from './components/Chat';
+import { LanguageProvider, useLanguage } from './contexts/LanguageContext.jsx';
 
-function App() {
+function AppContent() {
+  const { lang, t, toggleLang } = useLanguage();
   const [lastScan, setLastScan] = useState(null);
   const [scanCount, setScanCount] = useState(0);
   const [blockCount, setBlockCount] = useState(0);
@@ -31,26 +33,33 @@ function App() {
         <h1 className="font-mechanical text-2xl font-bold tracking-[0.3em] text-glow-red" style={{ color: '#ff1744' }}>
           CHAINPILOT
         </h1>
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-6">
           <div className="hidden md:flex flex-col items-center">
             <span className="font-mechanical text-sm tracking-[0.4em] text-gray-400 font-medium">
-              SAFE DEFI AGENT
+              {t.tagline}
             </span>
             <div className="flex items-center gap-4 mt-1 text-[9px] font-mechanical tracking-wider text-gray-600">
               <span className="flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 pulse-glow" style={{ color: '#22c55e' }} />
-                REAL-TIME
+                {t.realtime}
               </span>
               <span className="flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
-                PRECISION
+                {t.precision}
               </span>
               <span className="flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                SAFETY
+                {t.safety}
               </span>
             </div>
           </div>
+          {/* Language Toggle */}
+          <button
+            onClick={toggleLang}
+            className="font-mechanical text-[10px] tracking-wider px-3 py-1.5 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:border-white/30 transition-all bg-white/[0.03]"
+          >
+            {lang === 'zh' ? 'EN' : '中'}
+          </button>
           <ConnectButton />
         </div>
       </header>
@@ -66,6 +75,14 @@ function App() {
         <Chat onScanComplete={handleScanComplete} />
       </div>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <LanguageProvider>
+      <AppContent />
+    </LanguageProvider>
   );
 }
 

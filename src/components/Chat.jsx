@@ -5,6 +5,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAccount } from 'wagmi';
+import { Shield } from 'lucide-react';
 import { runSecurityScan, simulateConsequence } from '../engine/index.js';
 import { chatWithAI, rephraseRisk } from '../config/api.js';
 import SafetyScoreCard from './SafetyScoreCard.jsx';
@@ -12,6 +13,7 @@ import SwapCard from './SwapCard.jsx';
 import ENSProfileCard from './ENSProfileCard.jsx';
 import BlockScreen from './BlockScreen.jsx';
 import CountdownTimer from './CountdownTimer.jsx';
+import { useLanguage } from '../contexts/LanguageContext.jsx';
 
 // Well-known token addresses
 const TOKEN_ADDRESSES = {
@@ -83,11 +85,12 @@ function extractTokenName(input) {
 }
 
 export default function Chat({ onScanComplete }) {
+  const { t } = useLanguage();
   const [messages, setMessages] = useState([WELCOME_MSG]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(true);
-  const [blockScreen, setBlockScreen] = useState(null); // F-grade block overlay
+  const [blockScreen, setBlockScreen] = useState(null);
   const messagesEndRef = useRef(null);
   const { isConnected } = useAccount();
 
@@ -254,18 +257,18 @@ export default function Chat({ onScanComplete }) {
       )}
 
       {/* Header */}
-      <div className="px-4 py-3 border-b border-white/[0.06] flex items-center justify-between">
-        <div>
+      <div className="px-4 py-3 border-b border-white/[0.06] flex items-center justify-between" style={{ background: 'rgba(23,23,30,0.5)', backdropFilter: 'blur(8px)' }}>
+        <div className="flex items-center gap-2">
+          <Shield className="w-4 h-4" style={{ color: '#1D9E75' }} />
           <h2 className="font-mechanical text-sm font-bold tracking-[0.15em]" style={{ color: '#ff1744' }}>
-            CHAINPILOT AI
+            {t.chatTitle}
           </h2>
-          <div className="w-12 h-[1px] mt-1" style={{ background: 'linear-gradient(90deg, #ff1744, transparent)' }} />
         </div>
         <button
           onClick={resetChat}
-          className="text-[10px] text-gray-500 hover:text-white border border-white/10 hover:border-white/30 px-2 py-1 rounded transition-all"
+          className="text-[10px] text-gray-500 hover:text-white border border-white/10 hover:border-white/30 px-2.5 py-1 rounded-lg transition-all font-mechanical"
         >
-          🔄 新对话
+          {t.newChat}
         </button>
       </div>
 
@@ -339,8 +342,8 @@ export default function Chat({ onScanComplete }) {
           <div className="flex justify-start w-full">
             <div className="w-full rounded-lg p-4 space-y-3" style={{ border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(26,26,26,0.5)' }}>
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                <span className="text-xs text-gray-500 font-mechanical">扫描中...</span>
+                <div className="w-2 h-2 rounded-full bg-safe animate-pulse" />
+                <span className="text-xs text-gray-500 font-mechanical">{t.scanning}</span>
               </div>
               <div className="skeleton h-3 w-3/4" />
               <div className="skeleton h-3 w-1/2" />
@@ -357,24 +360,24 @@ export default function Chat({ onScanComplete }) {
       </div>
 
       {/* Input */}
-      <div className="p-3 border-t border-white/[0.06]">
-        <div className="flex items-center gap-2 bg-[#1A1A1A] rounded-lg px-3 py-2 border border-white/[0.06] focus-within:border-[#ff1744]/30 focus-within:shadow-[0_0_12px_rgba(255,23,68,0.1)] transition-all duration-300">
+      <div className="p-3 border-t border-white/[0.06]" style={{ background: 'rgba(23,23,30,0.5)', backdropFilter: 'blur(8px)' }}>
+        <div className="flex items-center gap-2 rounded-xl px-3 py-1 border border-white/[0.06] focus-within:border-safe/30 focus-within:shadow-[0_0_12px_rgba(29,158,117,0.1)] transition-all duration-300" style={{ background: 'rgba(23,23,30,0.8)' }}>
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="试试：帮我查PEPE安全吗"
+            placeholder={t.inputPlaceholder}
             className="flex-1 bg-transparent text-sm text-white placeholder-gray-600 outline-none"
             disabled={loading}
           />
           <button
             onClick={() => handleSend()}
             disabled={loading || !input.trim()}
-            className="disabled:opacity-30 transition-colors hover:opacity-80"
-            style={{ color: '#ff1744' }}
+            className="p-2 rounded-lg transition-all disabled:opacity-30"
+            style={{ backgroundColor: 'rgba(29,158,117,0.15)', color: '#1D9E75' }}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
               <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
             </svg>
           </button>

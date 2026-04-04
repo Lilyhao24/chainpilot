@@ -1,10 +1,12 @@
 /**
- * SwapCard — Swap quote display with real Uniswap pricing
- * Falls back to demo rates if API unavailable
+ * SwapCard — Manus-style swap quote with input→arrow→output visual
+ * Real Uniswap pricing with fallback. UI only change, logic preserved.
  */
 
 import { useState, useEffect } from 'react';
+import { ArrowDown, Shield, Lock } from 'lucide-react';
 import { getSwapQuote } from '../config/api.js';
+import { useLanguage } from '../contexts/LanguageContext.jsx';
 
 const WETH = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
 const TOKEN_ADDRESSES = {
@@ -17,143 +19,168 @@ const TOKEN_ADDRESSES = {
   'WBTC': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
 };
 
-// Fallback demo rates (ETH → token)
 const FALLBACK_RATES = {
   'USDC': 2845, 'USDT': 2845, 'DAI': 2845,
-  'PEPE': 8000000, 'UNI': 200, 'LINK': 170,
-  'WBTC': 0.033,
+  'PEPE': 8000000, 'UNI': 200, 'LINK': 170, 'WBTC': 0.033,
 };
+
+function DetailRow({ label, value, note, icon }) {
+  return (
+    <div className="flex items-start justify-between py-1.5 border-b border-white/[0.04] last:border-0">
+      <span className="text-xs text-gray-500">{label}</span>
+      <div className="flex items-center gap-1 text-right">
+        {icon}
+        <div>
+          <span className="text-xs text-white">{value}</span>
+          {note && <p className="text-[10px] text-gray-500">{note}</p>}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function SwapCard({ token, amount, slippage }) {
   const [confirmed, setConfirmed] = useState(false);
   const [quote, setQuote] = useState(null);
   const [loading, setLoading] = useState(true);
   const [usingFallback, setUsingFallback] = useState(false);
+  const { t } = useLanguage();
 
   const slippageDefault = slippage?.default || 0.5;
 
   useEffect(() => {
     async function fetchQuote() {
       const tokenOut = TOKEN_ADDRESSES[token];
-      if (!tokenOut) {
-        // Unknown token — use fallback
-        setUsingFallback(true);
-        setLoading(false);
-        return;
-      }
-
+      if (!tokenOut) { setUsingFallback(true); setLoading(false); return; }
       try {
         const data = await getSwapQuote({
-          tokenInChainId: 1,
-          tokenOutChainId: 1,
-          tokenIn: WETH,
-          tokenOut,
+          tokenInChainId: 1, tokenOutChainId: 1,
+          tokenIn: WETH, tokenOut,
           amount: String(Math.round(parseFloat(amount) * 1e18)),
-          type: 'EXACT_INPUT',
-          slippageTolerance: slippageDefault,
+          type: 'EXACT_INPUT', slippageTolerance: slippageDefault,
           configs: [{ routingType: 'CLASSIC', protocols: ['V2', 'V3', 'MIXED'] }],
         });
-
         if (data?.quote?.quoteDecimals) {
           setQuote({
             output: parseFloat(data.quote.quoteDecimals).toFixed(token === 'WBTC' ? 6 : 2),
             gasUsd: data.quote.gasUseEstimateUSD || '—',
             route: data.quote.route?.[0]?.[0]?.protocol || 'Uniswap',
           });
-        } else {
-          setUsingFallback(true);
-        }
-      } catch {
-        setUsingFallback(true);
-      } finally {
-        setLoading(false);
-      }
+        } else { setUsingFallback(true); }
+      } catch { setUsingFallback(true); }
+      finally { setLoading(false); }
     }
-
     fetchQuote();
   }, [token, amount, slippageDefault]);
 
-  // Calculate output amount
-  const outputAmount = quote
-    ? quote.output
-    : usingFallback
-      ? (token === 'WBTC'
-          ? (parseFloat(amount) * (FALLBACK_RATES[token] || 1)).toFixed(6)
-          : (parseFloat(amount) * (FALLBACK_RATES[token] || 1)).toFixed(2))
-      : '—';
+  const outputAmount = quote ? quote.output
+    : usingFallback ? (token === 'WBTC'
+        ? (parseFloat(amount) * (FALLBACK_RATES[token] || 1)).toFixed(6)
+        : (parseFloat(amount) * (FALLBACK_RATES[token] || 1)).toFixed(2))
+    : '—';
+
+  const inputUsd = `$${(parseFloat(amount) * 2845).toFixed(2)}`;
 
   if (loading) {
     return (
-      <div className="rounded-lg p-4 my-2 border border-cyan-500/20 bg-cyan-500/5">
-        <div className="text-sm text-gray-400 animate-pulse font-mechanical flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-          获取 Uniswap 实时报价中...
+      <div className="cp-card my-2">
+        <div className="p-5">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-safe animate-pulse" />
+            <span className="text-xs text-gray-400 font-mechanical">{t.fetchingQuote}</span>
+          </div>
+          <div className="mt-3 space-y-2">
+            <div className="skeleton h-12 w-full" />
+            <div className="skeleton h-8 w-8 mx-auto rounded-full" />
+            <div className="skeleton h-12 w-full" />
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div
-      className="rounded-lg overflow-hidden my-2"
-      style={{
-        border: '1px solid rgba(0, 229, 255, 0.2)',
-        background: 'linear-gradient(135deg, rgba(0, 229, 255, 0.05), transparent)',
-      }}
-    >
-      {/* Quote */}
-      <div className="p-4">
-        <div className="font-mechanical text-sm mb-3">
-          <span className="text-gray-400">{amount} ETH</span>
-          <span className="mx-2 text-cyan-400">→</span>
-          <span className="text-cyan-400 font-bold text-lg">{outputAmount} {token}</span>
-        </div>
+    <div className="cp-card my-2">
+      <div className="p-5">
+        {/* Header */}
+        <h3 className="text-[10px] font-semibold text-gray-500 tracking-widest mb-4 font-mechanical">{t.swapQuote}</h3>
 
-        {/* Details */}
-        <div className="space-y-1 text-[10px] text-gray-400 font-mechanical">
-          <div className="flex justify-between">
-            <span>数据源</span>
-            <span className={quote ? 'text-green-400' : 'text-yellow-400'}>
-              {quote ? `Uniswap ${quote.route}` : '参考价格（API暂不可用）'}
-            </span>
-          </div>
-          {quote?.gasUsd && (
-            <div className="flex justify-between">
-              <span>预估Gas</span>
-              <span className="text-gray-300">${quote.gasUsd}</span>
+        {/* Swap Visual: Input → Arrow → Output */}
+        <div className="space-y-2 mb-5">
+          {/* Input token */}
+          <div className="flex items-center justify-between p-3 rounded-lg border border-white/[0.06]" style={{ background: 'rgba(255,255,255,0.02)' }}>
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ background: '#627EEA' }}>
+                E
+              </div>
+              <span className="text-sm font-bold text-white">{amount} ETH</span>
             </div>
-          )}
-          <div className="flex justify-between">
-            <span>滑点</span>
-            <span className="text-cyan-400">{slippageDefault}%（由Safety Score自动设定）</span>
+            <span className="text-xs text-gray-500">{inputUsd}</span>
           </div>
-          <div className="flex justify-between">
-            <span>授权</span>
-            <span className="text-green-400">精确授权110%（非无限授权）</span>
+
+          {/* Arrow */}
+          <div className="flex justify-center">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center border" style={{ background: 'rgba(29,158,117,0.1)', borderColor: 'rgba(29,158,117,0.3)' }}>
+              <ArrowDown className="w-4 h-4 text-safe" />
+            </div>
           </div>
-          <div className="flex justify-between">
-            <span>MEV防护</span>
-            <span className="text-green-400">已启用</span>
+
+          {/* Output token */}
+          <div className="flex items-center justify-between p-3 rounded-lg border border-white/[0.06]" style={{ background: 'rgba(255,255,255,0.02)' }}>
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ background: '#2775CA' }}>
+                {token.charAt(0)}
+              </div>
+              <span className="text-sm font-bold text-white">{outputAmount} {token}</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Action */}
-      <div className="px-4 pb-4">
+        {/* Transaction Details */}
+        <div className="space-y-0 mb-5">
+          <DetailRow
+            label={t.source}
+            value={quote ? `Uniswap ${quote.route}` : t.fallbackNote}
+          />
+          {quote?.gasUsd && (
+            <DetailRow label={t.estGas} value={`$${quote.gasUsd}`} />
+          )}
+          <DetailRow
+            label={t.slippage}
+            value={`${slippageDefault}%`}
+            note={t.slippageNote}
+          />
+          <DetailRow
+            label={t.approval}
+            value={t.approvalNote}
+            icon={<Lock className="w-3 h-3 text-safe" />}
+          />
+          <DetailRow label={t.mevProtection} value={t.mevEnabled} />
+        </div>
+
+        {/* Confirm Button */}
         {!confirmed ? (
           <button
             onClick={() => setConfirmed(true)}
-            className="w-full py-2.5 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm font-bold transition-all active:scale-[0.98]"
-            style={{ boxShadow: '0 0 20px rgba(0, 230, 118, 0.2)' }}
+            className="w-full py-3 rounded-lg text-white text-sm font-semibold transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+            style={{ backgroundColor: '#1D9E75', boxShadow: '0 0 20px rgba(29, 158, 117, 0.2)' }}
           >
-            确认交易
+            <Shield className="w-4 h-4" />
+            {t.confirmTrade}
           </button>
         ) : (
-          <div className="text-center py-2.5 rounded-lg border border-green-500/30 bg-green-500/10">
-            <div className="text-green-400 text-sm font-medium">✓ 交易已提交</div>
-            <div className="text-[10px] text-gray-500 mt-1">请在 MetaMask 中确认签名</div>
+          <div className="text-center py-3 rounded-lg border border-safe/30" style={{ background: 'rgba(29,158,117,0.08)' }}>
+            <div className="text-safe text-sm font-medium flex items-center justify-center gap-1.5">
+              <Shield className="w-4 h-4" /> {t.txSubmitted}
+            </div>
+            <div className="text-[10px] text-gray-500 mt-1">{t.confirmInWallet}</div>
           </div>
         )}
+
+        {/* Disclaimer */}
+        <p className="text-[10px] text-gray-600 text-center mt-3">
+          ChainPilot does not hold your private keys
+        </p>
       </div>
     </div>
   );

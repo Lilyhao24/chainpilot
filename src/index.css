@@ -86,6 +86,36 @@ body {
 .grade-c { background: #D85A30; color: #fff; }
 .grade-f { background: #E24B4A; color: #fff; }
 
+/* ChainPilot unified card */
+.cp-card {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(23, 23, 30, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Semantic color utilities */
+.text-safe { color: #1D9E75; }
+.text-warn { color: #BA7517; }
+.text-danger { color: #E24B4A; }
+.text-cp-orange { color: #D85A30; }
+.text-cp-info { color: #3B82F6; }
+.bg-safe { background-color: #1D9E75; }
+.bg-warn { background-color: #BA7517; }
+.bg-danger { background-color: #E24B4A; }
+.border-safe { border-color: #1D9E75; }
+.border-warn { border-color: #BA7517; }
+.border-danger { border-color: #E24B4A; }
+.glow-safe { box-shadow: 0 0 20px rgba(29, 158, 117, 0.3); }
+.glow-danger { box-shadow: 0 0 20px rgba(226, 75, 74, 0.3); }
+.glow-warn { box-shadow: 0 0 20px rgba(186, 117, 23, 0.3); }
+
+/* Monospace code font */
+.font-mono-code {
+  font-family: 'JetBrains Mono', monospace;
+}
+
 /* Fade in animation for tooltips */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-4px); }

@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { useAccount, useBalance, useEnsName, useEnsAvatar } from 'wagmi';
 import GaugeDial from './GaugeDial';
 import { WalletPanel, SecurityPanel, ScanPanel, MarketPanel } from './DialPanels.jsx';
+import { useLanguage } from '../contexts/LanguageContext.jsx';
 
 const colorMap = {
   red: '#ff1744',
@@ -96,12 +97,14 @@ function MetricCard({ title, value, unit, change, color = 'red', positive = true
   );
 }
 
-const INFO_CARDS = [
-  { title: 'BTC/USD', value: '45,230', unit: '$', change: '+3.2%', color: 'yellow', positive: true },
-  { title: 'ETH/USD', value: '2,845', unit: '$', change: '+2.1%', color: 'orange', positive: true },
-  { title: 'MARKET CAP', value: '1.2', unit: 'T', change: '+1.5%', color: 'cyan', positive: true },
-  { title: 'PORTFOLIO VALUE', value: '245,680', unit: '$', change: '+12.4%', color: 'red', positive: true },
-];
+function getInfoCards(t) {
+  return [
+    { title: t.btcUsd, value: '45,230', unit: '$', change: '+3.2%', color: 'yellow', positive: true },
+    { title: t.ethUsd, value: '2,845', unit: '$', change: '+2.1%', color: 'orange', positive: true },
+    { title: t.totalMcap, value: '1.2', unit: 'T', change: '+1.5%', color: 'cyan', positive: true },
+    { title: t.portfolio, value: '245,680', unit: '$', change: '+12.4%', color: 'red', positive: true },
+  ];
+}
 
 const DEMO_TRANSACTIONS = [
   { type: 'BUY', token: 'USDC', detail: '284.50 USDC · 0.1 ETH', time: '2 mins ago' },
@@ -109,15 +112,22 @@ const DEMO_TRANSACTIONS = [
   { type: 'BUY', token: 'PEPE', detail: '1,000,000 PEPE · $12.50', time: '1 hour ago' },
 ];
 
-// Tooltip texts
-const TOOLTIPS = {
-  wallet: '你的钱包身份和总资产。连接钱包后自动显示ENS名称和余额。',
-  security: '7条安全规则由代码强制执行，AI无法绕过。包括蜜罐拦截、假代币检测、大额保护等。',
-  scan: '最近一次代币安全检查结果。点击查看历史扫描和拦截记录。',
-  market: '关注币种的实时价格。点击切换币种或添加新关注。',
-};
+function getTooltips(lang) {
+  return lang === 'zh' ? {
+    wallet: '你的钱包身份和总资产。连接钱包后自动显示ENS名称和余额。',
+    security: '7条安全规则由代码强制执行，AI无法绕过。包括蜜罐拦截、假代币检测、大额保护等。',
+    scan: '最近一次代币安全检查结果。点击查看历史扫描和拦截记录。',
+    market: '关注币种的实时价格。点击切换币种或添加新关注。',
+  } : {
+    wallet: 'Your wallet identity and total assets. ENS name and balance shown after connecting.',
+    security: '7 safety rules enforced by code, AI cannot bypass. Includes honeypot, fake token, large trade protection.',
+    scan: 'Most recent token safety scan result. Click to view scan history and blocked tokens.',
+    market: 'Real-time prices for watched tokens. Click to switch or add tokens.',
+  };
+}
 
 export default function Dashboard({ lastScan, scanCount = 0, blockCount = 0, scanHistory = [] }) {
+  const { lang, t } = useLanguage();
   const { address, isConnected } = useAccount();
   const { data: balance } = useBalance({ address });
   const { data: ensName } = useEnsName({ address });
@@ -127,9 +137,14 @@ export default function Dashboard({ lastScan, scanCount = 0, blockCount = 0, sca
     largeThreshold: 80, cooldownC: 300, cooldownB: 180, mevEnabled: true,
   });
 
-  const ethDisplay = balance ? `${parseFloat(balance.formatted).toFixed(3)} ETH` : '0 ETH';
+  const TOOLTIPS = getTooltips(lang);
+  const INFO_CARDS = getInfoCards(t);
+
+  const ethBalance = balance ? parseFloat(balance.formatted) : 0;
+  const ethUsd = ethBalance * 2845;
+  const ethDisplay = balance ? `${ethBalance.toFixed(3)} ETH` : '0 ETH';
   const walletDisplay = ensName || (address ? `${address.slice(0,4)}...${address.slice(-3)}` : '—');
-  const walletSub = isConnected ? (ensName ? `${address?.slice(0,6)}...${address?.slice(-4)} · ${ethDisplay}` : ethDisplay) : 'Connect Wallet';
+  const walletSub = isConnected ? (ensName ? `$${Math.round(ethUsd).toLocaleString()}` : ethDisplay) : t.connectWallet;
 
   const togglePanel = (panel) => setActivePanel(prev => prev === panel ? null : panel);
 
@@ -152,7 +167,7 @@ export default function Dashboard({ lastScan, scanCount = 0, blockCount = 0, sca
         <div className="grid grid-cols-4 gap-6 mb-4" style={{ animation: 'fadeIn 0.6s ease-out' }}>
           <div className="flex justify-center relative">
             <GaugeDial
-              label="WALLET"
+              label={t.wallet}
               value={isConnected ? walletDisplay : '—'}
               subValue={walletSub}
               color="red"
@@ -164,9 +179,9 @@ export default function Dashboard({ lastScan, scanCount = 0, blockCount = 0, sca
           </div>
           <div className="flex justify-center relative">
             <GaugeDial
-              label="SECURITY ENGINE"
+              label={t.securityEngine}
               value="7/7"
-              subValue="ACTIVE"
+              subValue={t.active}
               color="orange"
               fillPercent={100}
               icon="🛡️"
@@ -176,9 +191,9 @@ export default function Dashboard({ lastScan, scanCount = 0, blockCount = 0, sca
           </div>
           <div className="flex justify-center relative">
             <GaugeDial
-              label="LAST SCAN"
+              label={t.lastScan}
               value={lastScan ? String(lastScan.total) : '—'}
-              subValue={lastScan ? `${scanCount} scans · ${blockCount} blocked` : 'No scans yet'}
+              subValue={lastScan ? `${scanCount}${t.scans} · ${blockCount}${t.blocked}` : t.noScans}
               color="yellow"
               fillPercent={lastScan ? lastScan.total : 0}
               badge={lastScan ? {
@@ -194,9 +209,9 @@ export default function Dashboard({ lastScan, scanCount = 0, blockCount = 0, sca
           </div>
           <div className="flex justify-center relative">
             <GaugeDial
-              label="MARKET"
+              label={t.market}
               value="2,845"
-              subValue="ETH/USD ↑2.1%"
+              subValue="ETH/USD +2.1%"
               color="cyan"
               fillPercent={68}
               icon="📈"
@@ -220,9 +235,9 @@ export default function Dashboard({ lastScan, scanCount = 0, blockCount = 0, sca
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
               <h3 className="font-mechanical text-xs tracking-[0.15em] uppercase"
                 style={{ color: colorMap[activePanel === 'wallet' ? 'red' : activePanel === 'security' ? 'orange' : activePanel === 'scan' ? 'yellow' : 'cyan'] }}>
-                {activePanel === 'wallet' ? 'WALLET DETAILS' :
-                 activePanel === 'security' ? 'SECURITY RULES' :
-                 activePanel === 'scan' ? 'SCAN HISTORY' : 'MARKET WATCHLIST'}
+                {activePanel === 'wallet' ? t.walletDetails :
+                 activePanel === 'security' ? t.securityRules :
+                 activePanel === 'scan' ? t.scanHistory : t.marketWatchlist}
               </h3>
               <button onClick={() => setActivePanel(null)} className="text-gray-500 hover:text-white text-xs transition-colors">✕</button>
             </div>
@@ -255,7 +270,7 @@ export default function Dashboard({ lastScan, scanCount = 0, blockCount = 0, sca
         <div className="data-card">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-mechanical text-xs tracking-[0.15em] text-glow-orange uppercase" style={{ color: '#ff9100' }}>
-              RECENT TRANSACTIONS
+              {t.recentTx}
             </h3>
             <div className="w-2 h-2 rounded-full pulse-glow" style={{ backgroundColor: '#ff1744', color: '#ff1744' }} />
           </div>

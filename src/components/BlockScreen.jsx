@@ -1,90 +1,94 @@
 /**
- * BlockScreen — Full-screen red warning for F-grade tokens
- * Triggered by: honeypot, fake token, no liquidity
- * Covers the left dashboard area for maximum drama
+ * BlockScreen — Manus-style interception screen for F-grade tokens
+ * Structured layout: header → reason → risk simulation → dismiss
  */
 
+import { ShieldAlert, AlertTriangle } from 'lucide-react';
 import { simulateConsequence } from '../engine/rules.js';
+import { useLanguage } from '../contexts/LanguageContext.jsx';
 
 export default function BlockScreen({ result, onDismiss }) {
+  const { t } = useLanguage();
   const { safetyScore, tokenName, tokenSymbol, mineSignals, marketCap } = result;
 
-  // Find the blocking reason
-  let blockReason = '该代币被评为F级，交易已拦截';
+  let blockReason = t.txBlocked;
   let blockDetail = '';
+  let ruleRef = '';
 
   if (safetyScore.isHoneypot) {
-    blockReason = '🚫 蜜罐代币检测';
-    blockDetail = '该代币无法卖出。一旦买入，你的资金将被永久锁定。';
+    blockReason = t.honeypotBlock;
+    blockDetail = t.honeypotBlockDetail;
+    ruleRef = '#1';
   } else if (mineSignals?.fakeToken?.level === 'block') {
-    blockReason = '🚫 假代币检测';
+    blockReason = t.fakeTokenBlock;
     blockDetail = mineSignals.fakeToken.reason;
+    ruleRef = '#2';
   } else if (mineSignals?.liquidity?.level === 'block') {
-    blockReason = '🚫 无流动性';
+    blockReason = t.noLiquidityBlock;
     blockDetail = mineSignals.liquidity.reason;
+    ruleRef = '#3';
   }
 
-  // Consequence simulation
   const consequence = simulateConsequence(marketCap, 1000);
 
   return (
     <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm">
       <div className="max-w-md w-full mx-4">
-        {/* Red glow container */}
-        <div
-          className="rounded-2xl p-8 text-center"
-          style={{
-            background: 'linear-gradient(135deg, rgba(226, 75, 74, 0.15), rgba(30, 10, 10, 0.95))',
-            border: '2px solid rgba(226, 75, 74, 0.4)',
-            boxShadow: '0 0 60px rgba(226, 75, 74, 0.2), inset 0 0 40px rgba(226, 75, 74, 0.05)',
-          }}
-        >
-          {/* Warning icon */}
-          <div className="text-6xl mb-4">🛑</div>
-
-          {/* Title */}
-          <h2
-            className="font-mechanical text-2xl font-bold mb-2 tracking-wider"
-            style={{ color: '#E24B4A', textShadow: '0 0 20px rgba(226, 75, 74, 0.5)' }}
-          >
-            交易已拦截
-          </h2>
-
-          {/* Token info */}
-          <div className="text-gray-400 text-sm mb-4 font-mechanical">
-            {tokenSymbol} · {tokenName}
+        <div className="cp-card" style={{ borderColor: 'rgba(226,75,74,0.4)' }}>
+          {/* Red gradient header */}
+          <div className="px-5 py-4 border-b" style={{ background: 'linear-gradient(90deg, rgba(226,75,74,0.15), rgba(226,75,74,0.03))', borderColor: 'rgba(226,75,74,0.2)' }}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(226,75,74,0.15)' }}>
+                <ShieldAlert className="w-5 h-5 text-danger" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-danger">{t.txBlocked}</h2>
+                <p className="text-xs text-gray-500">{t.blockedByRule}</p>
+              </div>
+            </div>
           </div>
 
-          {/* Score */}
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <span className="text-5xl font-black font-mechanical" style={{ color: '#E24B4A' }}>
-              {safetyScore.total}
-            </span>
-            <span className="grade-f text-lg font-bold px-3 py-1 rounded">
-              F
-            </span>
-          </div>
+          <div className="p-5 space-y-5">
+            {/* Token + Score */}
+            <div className="flex items-center gap-3">
+              <span className="text-4xl font-bold font-mono-code text-danger">{safetyScore.total}</span>
+              <div>
+                <span className="grade-f text-sm font-bold px-2.5 py-0.5 rounded inline-block">F</span>
+                <div className="text-xs text-gray-400 mt-1 font-mechanical">{tokenSymbol} · {tokenName}</div>
+              </div>
+            </div>
 
-          {/* Block reason */}
-          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 mb-4 text-left">
-            <div className="text-red-400 font-bold text-sm mb-1">{blockReason}</div>
-            <div className="text-red-300/70 text-xs">{blockDetail}</div>
-          </div>
+            {/* Block Reason */}
+            <div className="space-y-2">
+              <h3 className="text-[10px] font-semibold text-gray-500 tracking-widest font-mechanical">{t.blockReason}</h3>
+              <div className="flex items-start gap-2 p-3 rounded-lg" style={{ background: 'rgba(226,75,74,0.05)', border: '1px solid rgba(226,75,74,0.15)' }}>
+                <AlertTriangle className="w-4 h-4 text-danger shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-xs text-white font-medium">{blockReason}</p>
+                  <p className="text-[10px] text-gray-400">{blockDetail}</p>
+                  {ruleRef && <p className="text-[10px] text-gray-600">{t.ruleSource} ({ruleRef})</p>}
+                </div>
+              </div>
+            </div>
 
-          {/* Consequence simulation */}
-          <div className="bg-white/[0.03] rounded-lg p-3 mb-4 text-left">
-            <div className="text-yellow-400 text-xs font-mechanical mb-1">⚠ 后果模拟</div>
-            <div className="text-white text-sm">{consequence.display}</div>
-            <div className="text-gray-600 text-[9px] mt-1">{consequence.disclaimer}</div>
-          </div>
+            {/* Risk Simulation */}
+            <div className="space-y-2">
+              <h3 className="text-[10px] font-semibold text-gray-500 tracking-widest font-mechanical">{t.riskSim}</h3>
+              <div className="p-3 rounded-lg border border-white/[0.06]" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                <div className="text-sm text-white mb-2">{consequence.display}</div>
+                <div className="text-[10px] text-gray-600">{consequence.disclaimer}</div>
+              </div>
+            </div>
 
-          {/* Dismiss button */}
-          <button
-            onClick={onDismiss}
-            className="w-full py-2.5 rounded-lg border border-gray-700 text-gray-400 hover:text-white hover:border-gray-500 text-sm transition-all font-mechanical"
-          >
-            我已了解风险
-          </button>
+            {/* Dismiss */}
+            <button
+              onClick={onDismiss}
+              className="w-full py-2.5 rounded-lg text-gray-400 hover:text-white text-xs font-semibold transition-all border border-white/10 hover:border-white/20"
+              style={{ background: 'rgba(255,255,255,0.03)' }}
+            >
+              {t.iUnderstand}
+            </button>
+          </div>
         </div>
       </div>
     </div>
