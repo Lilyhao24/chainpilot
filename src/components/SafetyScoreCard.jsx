@@ -84,8 +84,8 @@ export default function SafetyScoreCard({ result }) {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-base font-bold text-white">{tokenSymbol}</span>
-                <span className="text-xs text-gray-400">{tokenName}</span>
+                <span className="text-lg font-bold text-white">{tokenSymbol}</span>
+                <span className="text-sm text-gray-300">{tokenName}</span>
               </div>
               {shortAddr && (
                 <div className="flex items-center gap-1.5 mt-0.5">
@@ -108,10 +108,10 @@ export default function SafetyScoreCard({ result }) {
         </div>
 
         {/* Score + Grade */}
-        <div className="flex items-center gap-4 mb-4">
-          <span className="text-5xl font-bold font-mono-code" style={{ color: gs.text }}>{safetyScore.total}</span>
+        <div className="flex items-center gap-4 mb-5">
+          <span className="text-6xl font-bold font-mono-code" style={{ color: gs.text, textShadow: `0 0 20px ${gs.text}40` }}>{safetyScore.total}</span>
           <div className="flex flex-col gap-1">
-            <span className="text-sm font-bold px-2.5 py-0.5 rounded text-white inline-block w-fit" style={{ backgroundColor: gs.bg }}>
+            <span className="text-base font-bold px-3 py-1 rounded-lg text-white inline-block w-fit" style={{ backgroundColor: gs.bg, boxShadow: `0 0 12px ${gs.bg}40` }}>
               {safetyScore.grade}
             </span>
           </div>
@@ -125,18 +125,18 @@ export default function SafetyScoreCard({ result }) {
             const status = getStatus(score, max);
             const pct = (score / max) * 100;
             return (
-              <div key={key} className="space-y-1 animate-slide-up" style={{ animationDelay: `${idx * 0.06}s` }}>
+              <div key={key} className="space-y-1.5 animate-slide-up" style={{ animationDelay: `${idx * 0.06}s` }}>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2">
                     <StatusIcon status={status} />
-                    <span className="text-xs text-white">{dimLabels[key]}</span>
+                    <span className="text-sm font-medium text-white">{dimLabels[key]}</span>
                   </div>
-                  <span className="text-xs font-mono-code font-semibold text-gray-400">{score}/{max}</span>
+                  <span className="text-sm font-mono-code font-bold" style={{ color: progressColor(status) }}>{score}/{max}</span>
                 </div>
-                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
                   <div
                     className="h-full rounded-full transition-all duration-700 ease-out"
-                    style={{ width: `${pct}%`, backgroundColor: progressColor(status) }}
+                    style={{ width: `${pct}%`, backgroundColor: progressColor(status), boxShadow: `0 0 8px ${progressColor(status)}60` }}
                   />
                 </div>
               </div>
@@ -146,16 +146,16 @@ export default function SafetyScoreCard({ result }) {
 
         {/* Mine Signals */}
         {mineSignals && (
-          <div className="mt-4 pt-3 border-t border-white/[0.06] space-y-1.5">
+          <div className="mt-4 pt-4 border-t border-white/[0.08] space-y-2.5">
             {Object.entries(mineSignals).map(([key, signal]) => {
               const isOk = signal.level === 'safe' || signal.level === 'info';
               const isBlock = signal.level === 'block';
               return (
-                <div key={key} className="flex items-center gap-1.5 text-[11px]">
-                  {isOk ? <Check className="w-3 h-3 text-safe" /> :
-                   isBlock ? <X className="w-3 h-3 text-danger" /> :
-                   <AlertTriangle className="w-3 h-3 text-warn" />}
-                  <span className={isOk ? 'text-safe' : isBlock ? 'text-danger' : 'text-warn'}>{lang === 'en' && signal.reasonEn ? signal.reasonEn : signal.reason}</span>
+                <div key={key} className="flex items-center gap-2 text-sm">
+                  {isOk ? <Check className="w-4 h-4 text-safe shrink-0" /> :
+                   isBlock ? <X className="w-4 h-4 text-danger shrink-0" /> :
+                   <AlertTriangle className="w-4 h-4 text-warn shrink-0" />}
+                  <span className={`font-medium ${isOk ? 'text-safe' : isBlock ? 'text-danger' : 'text-warn'}`}>{lang === 'en' && signal.reasonEn ? signal.reasonEn : signal.reason}</span>
                 </div>
               );
             })}
@@ -164,9 +164,9 @@ export default function SafetyScoreCard({ result }) {
 
         {/* Deployer ENS */}
         {deployerENS && (
-          <div className="mt-3 flex items-center gap-1.5 text-[11px]">
-            {deployerENS.hasEns ? <Check className="w-3 h-3 text-safe" /> : <AlertTriangle className="w-3 h-3 text-gray-500" />}
-            <span className={deployerENS.hasEns ? 'text-safe' : 'text-gray-500'}>{lang === 'en' && deployerENS.displayEn ? deployerENS.displayEn : deployerENS.display}</span>
+          <div className="mt-3 flex items-center gap-2 text-sm">
+            {deployerENS.hasEns ? <Check className="w-4 h-4 text-safe shrink-0" /> : <AlertTriangle className="w-4 h-4 text-gray-400 shrink-0" />}
+            <span className={`font-medium ${deployerENS.hasEns ? 'text-safe' : 'text-gray-400'}`}>{lang === 'en' && deployerENS.displayEn ? deployerENS.displayEn : deployerENS.display}</span>
             {deployerENS.hasEns && (
               <span className="text-[9px] px-1.5 py-0.5 rounded text-purple-300 font-mechanical" style={{ background: 'rgba(168,85,247,0.15)' }}>
                 ENS

@@ -30,15 +30,15 @@ function AppContent() {
     <div className="h-screen bg-[#0A0A0A] text-white flex flex-col overflow-hidden">
       {/* Top Bar */}
       <header className="flex items-center justify-between px-6 py-3 border-b border-white/[0.06] shrink-0 bg-[#0D0D0D]">
-        <h1 className="font-mechanical text-4xl font-bold tracking-[0.3em] text-glow-red" style={{ color: '#ff1744' }}>
-          CHAINPILOT
-        </h1>
         <div className="flex items-center gap-6">
-          <div className="hidden md:flex flex-col items-center">
-            <span className="font-mechanical text-xl tracking-[0.4em] text-gray-300 font-medium">
+          <h1 className="font-mechanical text-4xl font-bold tracking-[0.3em] text-glow-red" style={{ color: '#ff1744' }}>
+            CHAINPILOT
+          </h1>
+          <div className="hidden md:flex flex-col">
+            <span className="font-mechanical text-lg tracking-[0.3em] text-gray-300 font-medium">
               {t.tagline}
             </span>
-            <div className="flex items-center gap-4 mt-1 text-[10px] font-mechanical tracking-wider text-gray-500">
+            <div className="flex items-center gap-3 mt-1 text-[10px] font-mechanical tracking-wider text-gray-500">
               <span className="flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 pulse-glow" style={{ color: '#22c55e' }} />
                 {t.realtime}
@@ -53,12 +53,13 @@ function AppContent() {
               </span>
             </div>
           </div>
-          {/* Language Toggle */}
+        </div>
+        <div className="flex items-center gap-4">
           <button
             onClick={toggleLang}
-            className="font-mechanical text-[10px] tracking-wider px-3 py-1.5 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:border-white/30 transition-all bg-white/[0.03]"
+            className="font-mechanical text-xs tracking-wider px-3 py-1.5 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:border-white/30 transition-all bg-white/[0.03]"
           >
-            {lang === 'zh' ? 'EN' : '中'}
+            {lang === 'zh' ? '中' : 'EN'}
           </button>
           <ConnectButton />
         </div>
