@@ -49,7 +49,7 @@ function WalletPanel() {
         />
         <div className="flex-1">
           <div className="font-mechanical text-lg font-bold" style={{ color: ensName ? '#A855F7' : '#fff' }}>
-            {ensName || 'No ENS'}
+            {ensName || `${address?.slice(0, 6)}...${address?.slice(-4)}`}
           </div>
           <div className="text-[10px] text-gray-500 font-mono-code">{address}</div>
         </div>
