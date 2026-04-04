@@ -203,13 +203,13 @@ export default function SafetyScoreCard({ result }) {
                 <div className="rounded-lg p-3" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
                   {rephrasedRisk ? (
                     <>
-                      <div className="text-[9px] text-safe/60 mb-1 font-mechanical">{t.aiRiskAnalysis}</div>
-                      <div className="text-[11px] text-gray-300 leading-relaxed">{rephrasedRisk}</div>
+                      <div className="text-xs text-safe font-semibold mb-2 font-mechanical">{t.aiRiskAnalysis}</div>
+                      <div className="text-sm text-gray-200 leading-relaxed">{rephrasedRisk}</div>
                     </>
                   ) : (
                     <>
-                      <div className="text-[9px] text-gray-600 mb-1 font-mechanical animate-pulse">{t.aiAnalyzing}</div>
-                      <div className="text-[11px] text-gray-400 leading-relaxed">{lang === 'en' ? riskTemplate.en : riskTemplate.zh}</div>
+                      <div className="text-xs text-gray-500 mb-2 font-mechanical animate-pulse">{t.aiAnalyzing}</div>
+                      <div className="text-sm text-gray-300 leading-relaxed">{lang === 'en' ? riskTemplate.en : riskTemplate.zh}</div>
                     </>
                   )}
                 </div>
