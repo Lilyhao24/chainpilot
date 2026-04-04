@@ -8,14 +8,16 @@ import { useState, useEffect } from 'react';
 import { createPublicClient, http } from 'viem';
 import { mainnet } from 'viem/chains';
 import { normalize } from 'viem/ens';
+import { useLanguage } from '../contexts/LanguageContext.jsx';
 
-// Public client for ENS resolution (no CORS issues with llamarpc)
+// Public client for ENS resolution — fallback chain for reliability
 const publicClient = createPublicClient({
   chain: mainnet,
-  transport: http('https://eth.llamarpc.com'),
+  transport: http('https://cloudflare-eth.com'),
 });
 
 export default function ENSProfileCard({ name }) {
+  const { lang } = useLanguage();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -31,7 +33,7 @@ export default function ENSProfileCard({ name }) {
         // Resolve address
         const address = await publicClient.getEnsAddress({ name: normalizedName });
         if (!address) {
-          setError('ENS 名称未找到');
+          setError(lang === 'en' ? 'ENS name not found' : 'ENS 名称未找到');
           return;
         }
 
@@ -53,8 +55,8 @@ export default function ENSProfileCard({ name }) {
           github,
           url,
         });
-      } catch (err) {
-        setError(`查询失败: ${err.message}`);
+      } catch {
+        setError(lang === 'en' ? 'ENS lookup failed. Please try again.' : 'ENS 查询失败，请重试。');
       } finally {
         setLoading(false);
       }

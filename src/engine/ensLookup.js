@@ -9,7 +9,7 @@ import { mainnet } from 'viem/chains';
 
 const publicClient = createPublicClient({
   chain: mainnet,
-  transport: http('https://eth.llamarpc.com'),
+  transport: http('https://cloudflare-eth.com'),
 });
 
 /**
