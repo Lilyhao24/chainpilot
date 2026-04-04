@@ -15,7 +15,7 @@ import BlockScreen from './BlockScreen.jsx';
 import CountdownTimer from './CountdownTimer.jsx';
 import { useLanguage } from '../contexts/LanguageContext.jsx';
 
-// Well-known token addresses
+// Well-known token addresses (Ethereum mainnet)
 const TOKEN_ADDRESSES = {
   'USDC': '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
   'USDT': '0xdac17f958d2ee523a2206206994597c13d831ec7',
@@ -26,6 +26,33 @@ const TOKEN_ADDRESSES = {
   'UNI':  '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984',
   'LINK': '0x514910771af9ca656af840dff83e8264ecf986ca',
   'PEPE': '0x6982508145454ce325ddbe47a25d4ec3d2311933',
+  'BNB':  '0xB8c77482e45F1F44dE1745F52C74426C631bDD52',
+  'WBNB': '0xB8c77482e45F1F44dE1745F52C74426C631bDD52',
+  'SHIB': '0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE',
+  'DOGE': '0x4206931337dc273a630d328dA6441786BfaD668f',
+  'ARB':  '0xB50721BCf8d664c30412Cfbc6cf7a15145234ad1',
+  'OP':   '0x4200000000000000000000000000000000000042',
+  'MATIC':'0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0',
+  'POL':  '0x455e53CBB86018Ac2B8092FdCd39d8444aFFC3F6',
+  'AAVE': '0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9',
+  'MKR':  '0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2',
+  'CRV':  '0xD533a949740bb3306d119CC777fa900bA034cd52',
+  'LDO':  '0x5A98FcBEA516Cf06857215779Fd812CA3beF1B32',
+  'APE':  '0x4d224452801ACEd8B2F0aebE155379bb5D594381',
+  'SAND': '0x3845badAde8e6dFF049820680d1F14bD3903a5d0',
+  'MANA': '0x0F5D2fB29fb7d3CFeE444a200298f468908cC942',
+  'COMP': '0xc00e94Cb662C3520282E6f5717214004A7f26888',
+  'SNX':  '0xC011a73ee8576Fb46F5E1c5751cA3B9Fe0af2a6F',
+  'SUSHI':'0x6B3595068778DD592e39A122f4f5a5cF09C90fE2',
+  '1INCH':'0x111111111117dC0aa78b770fA6A738034120C302',
+  'ENS':  '0xC18360217D8F7Ab5e7c516566761Ea12Ce7F9D72',
+  'GRT':  '0xc944E90C64B2c07662A292be6244BDf05Cda44a7',
+  'FET':  '0xaea46A60368A7bD060eec7DF8CBa43b7EF41Ad85',
+  'RENDER':'0x6De037ef9aD2725EB40118Bb1702EBb27e4Aeb24',
+  'IMX':  '0xF57e7e7C23978C3cAEC3C3548E3D615c346e79fF',
+  'FLOKI':'0xcf0C122c6b73ff809C693DB761e7BaeBe62b6a2E',
+  'WLD':  '0x163f8C2467924be0ae7B5347228CABF260318753',
+  'TRUMP':'0x576e2BeD8F7b46D34016198911Cdf9886f78bea7',
 };
 
 function getQuickActions(lang) {
@@ -52,18 +79,22 @@ function getWelcomeMsg(t) {
 function parseIntent(input) {
   const text = input.trim().toLowerCase();
 
-  // Safety check — needs explicit keywords
-  const safetyPattern = /(?:查|检查|安全|扫描|check|safe|scan|analyze|score)/i;
+  // Pure address → safety check
+  if (/^0x[a-fA-F0-9]{40}$/.test(text)) {
+    return { type: 'safety_check', token: 'Unknown', address: text };
+  }
+
+  // ENS lookup
+  const ensMatch = input.match(/([a-zA-Z0-9-]+\.eth)/);
+  if (ensMatch) return { type: 'ens', name: ensMatch[1] };
+
+  // Safety check — explicit keywords
+  const safetyPattern = /(?:查|检查|安全|扫描|check|safe|scan|analyze|score|risk|风险|审计|audit)/i;
   if (safetyPattern.test(text)) {
     const tokenName = extractTokenName(input);
     if (tokenName) return { type: 'safety_check', token: tokenName, address: TOKEN_ADDRESSES[tokenName] };
     const addrMatch = text.match(/0x[a-fA-F0-9]{40}/);
     if (addrMatch) return { type: 'safety_check', token: 'Unknown', address: addrMatch[0] };
-  }
-
-  // Pure address
-  if (/^0x[a-fA-F0-9]{40}$/.test(text)) {
-    return { type: 'safety_check', token: 'Unknown', address: text };
   }
 
   // Swap
@@ -77,9 +108,11 @@ function parseIntent(input) {
     };
   }
 
-  // ENS
-  const ensMatch = input.match(/([a-zA-Z0-9-]+\.eth)/);
-  if (ensMatch) return { type: 'ens', name: ensMatch[1] };
+  // Pure token name (e.g. just "BNB", "pepe", "shib") → auto safety check
+  const tokenName = extractTokenName(input);
+  if (tokenName && text.replace(/[^a-z0-9]/g, '').length <= tokenName.length + 3) {
+    return { type: 'safety_check', token: tokenName, address: TOKEN_ADDRESSES[tokenName] };
+  }
 
   // General chat
   return { type: 'chat', message: input };
