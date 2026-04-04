@@ -194,7 +194,7 @@ export default function SafetyScoreCard({ result }) {
                   <span className="text-safe font-mono-code">
                     {slippage.default}% / {slippage.cap}%
                   </span>
-                  <span className="text-gray-600">({slippage.label})</span>
+                  <span className="text-gray-600">({lang === 'en' && slippage.labelEn ? slippage.labelEn : slippage.label})</span>
                 </div>
               )}
 
@@ -209,7 +209,7 @@ export default function SafetyScoreCard({ result }) {
                   ) : (
                     <>
                       <div className="text-[9px] text-gray-600 mb-1 font-mechanical animate-pulse">{t.aiAnalyzing}</div>
-                      <div className="text-[11px] text-gray-400 leading-relaxed">{riskTemplate.zh}</div>
+                      <div className="text-[11px] text-gray-400 leading-relaxed">{lang === 'en' ? riskTemplate.en : riskTemplate.zh}</div>
                     </>
                   )}
                 </div>
