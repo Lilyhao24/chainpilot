@@ -6,24 +6,50 @@ import { LanguageProvider, useLanguage } from './contexts/LanguageContext.jsx';
 
 function AppContent() {
   const { lang, t, toggleLang } = useLanguage();
-  const [lastScan, setLastScan] = useState(null);
-  const [scanCount, setScanCount] = useState(0);
-  const [blockCount, setBlockCount] = useState(0);
-  const [scanHistory, setScanHistory] = useState([]);
+  // Persist scan history in localStorage
+  const [scanHistory, setScanHistory] = useState(() => {
+    try {
+      const saved = localStorage.getItem('chainpilot_scan_history');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+  const [scanCount, setScanCount] = useState(() => {
+    try { return parseInt(localStorage.getItem('chainpilot_scan_count') || '0'); } catch { return 0; }
+  });
+  const [blockCount, setBlockCount] = useState(() => {
+    try { return parseInt(localStorage.getItem('chainpilot_block_count') || '0'); } catch { return 0; }
+  });
+  const [lastScan, setLastScan] = useState(() => {
+    try {
+      const saved = localStorage.getItem('chainpilot_last_scan');
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
 
   function handleScanComplete(safetyScore) {
     setLastScan(safetyScore);
-    setScanCount((c) => c + 1);
+    setScanCount((c) => {
+      const next = c + 1;
+      localStorage.setItem('chainpilot_scan_count', String(next));
+      return next;
+    });
     if (safetyScore.grade === 'F') {
-      setBlockCount((c) => c + 1);
+      setBlockCount((c) => {
+        const next = c + 1;
+        localStorage.setItem('chainpilot_block_count', String(next));
+        return next;
+      });
     }
-    setScanHistory((prev) => [
-      {
-        total: safetyScore.total, grade: safetyScore.grade, symbol: safetyScore.symbol || '??',
-        time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
-      },
-      ...prev.slice(0, 19), // Keep last 20
-    ]);
+    const entry = {
+      total: safetyScore.total, grade: safetyScore.grade, symbol: safetyScore.symbol || '??',
+      time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+    };
+    setScanHistory((prev) => {
+      const next = [entry, ...prev.slice(0, 19)];
+      localStorage.setItem('chainpilot_scan_history', JSON.stringify(next));
+      return next;
+    });
+    localStorage.setItem('chainpilot_last_scan', JSON.stringify(safetyScore));
   }
 
   return (

@@ -32,9 +32,9 @@ export default function BlockScreen({ result, onDismiss }) {
   const consequence = simulateConsequence(marketCap, 1000);
 
   return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm">
-      <div className="max-w-md w-full mx-4">
-        <div className="cp-card" style={{ borderColor: 'rgba(226,75,74,0.4)' }}>
+    <div className="absolute inset-0 z-50 flex items-center justify-center backdrop-blur-md" style={{ background: 'radial-gradient(ellipse at center, rgba(226,75,74,0.12) 0%, rgba(10,10,10,0.95) 70%)' }}>
+      <div className="max-w-lg w-full mx-6">
+        <div className="cp-card" style={{ borderColor: 'rgba(226,75,74,0.4)', boxShadow: '0 0 60px rgba(226,75,74,0.15), 0 0 120px rgba(226,75,74,0.05)' }}>
           {/* Red gradient header */}
           <div className="px-5 py-4 border-b" style={{ background: 'linear-gradient(90deg, rgba(226,75,74,0.15), rgba(226,75,74,0.03))', borderColor: 'rgba(226,75,74,0.2)' }}>
             <div className="flex items-center gap-3">
@@ -48,10 +48,10 @@ export default function BlockScreen({ result, onDismiss }) {
             </div>
           </div>
 
-          <div className="p-5 space-y-5">
+          <div className="p-6 space-y-5">
             {/* Token + Score */}
-            <div className="flex items-center gap-3">
-              <span className="text-4xl font-bold font-mono-code text-danger">{safetyScore.total}</span>
+            <div className="flex items-center gap-4">
+              <span className="text-5xl font-bold font-mono-code text-danger">{safetyScore.total}</span>
               <div>
                 <span className="grade-f text-sm font-bold px-2.5 py-0.5 rounded inline-block">F</span>
                 <div className="text-xs text-gray-400 mt-1 font-mechanical">{tokenSymbol} · {tokenName}</div>
@@ -75,7 +75,7 @@ export default function BlockScreen({ result, onDismiss }) {
             <div className="space-y-2">
               <h3 className="text-[10px] font-semibold text-gray-500 tracking-widest font-mechanical">{t.riskSim}</h3>
               <div className="p-3 rounded-lg border border-white/[0.06]" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                <div className="text-sm text-white mb-2">{consequence.display}</div>
+                <div className="text-base text-white mb-2 font-medium">{consequence.display}</div>
                 <div className="text-[10px] text-gray-600">{consequence.disclaimer}</div>
               </div>
             </div>
