@@ -6,9 +6,9 @@ const translations = {
   zh: {
     // Header
     tagline: '安全 DEFI 代理',
-    realtime: '实时',
-    precision: '精准',
-    safety: '安全',
+    realtime: '安全',
+    precision: '透明',
+    safety: '智能',
 
     // Dials
     wallet: '钱包',
@@ -122,9 +122,9 @@ const translations = {
 
   en: {
     tagline: 'SAFE DEFI AGENT',
-    realtime: 'REAL-TIME',
-    precision: 'PRECISION',
-    safety: 'SAFETY',
+    realtime: 'SAFE',
+    precision: 'TRANSPARENT',
+    safety: 'SMART',
 
     wallet: 'WALLET',
     securityEngine: 'SECURITY',
