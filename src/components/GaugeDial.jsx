@@ -156,7 +156,6 @@ export default function GaugeDial({
   subValue,
   color = 'red',
   fillPercent = 75,
-  icon,
   badge,
   onClick,
   tooltip,
@@ -188,7 +187,6 @@ export default function GaugeDial({
 
           {/* Center content overlay */}
           <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
-            {icon && <div className="text-base mb-0.5 opacity-40">{icon}</div>}
             <div className="flex items-center gap-1.5">
               <span
                 className="font-mechanical text-xl font-bold"

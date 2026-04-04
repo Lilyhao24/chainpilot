@@ -172,7 +172,6 @@ export default function Dashboard({ lastScan, scanCount = 0, blockCount = 0, sca
               subValue={walletSub}
               color="red"
               fillPercent={isConnected ? 75 : 10}
-              icon={ensAvatar ? undefined : '👛'}
               tooltip={TOOLTIPS.wallet}
               onClick={() => togglePanel('wallet')}
             />
@@ -184,7 +183,6 @@ export default function Dashboard({ lastScan, scanCount = 0, blockCount = 0, sca
               subValue={t.active}
               color="orange"
               fillPercent={100}
-              icon="🛡️"
               tooltip={TOOLTIPS.security}
               onClick={() => togglePanel('security')}
             />
@@ -214,7 +212,6 @@ export default function Dashboard({ lastScan, scanCount = 0, blockCount = 0, sca
               subValue="ETH/USD +2.1%"
               color="cyan"
               fillPercent={68}
-              icon="📈"
               tooltip={TOOLTIPS.market}
               onClick={() => togglePanel('market')}
             />
