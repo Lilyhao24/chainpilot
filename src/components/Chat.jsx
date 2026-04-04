@@ -219,7 +219,7 @@ export default function Chat({ onScanComplete }) {
 
           const result = await runSecurityScan(intent.address);
           replaceLastMessage({ role: 'ai', type: 'safety_card', result });
-          onScanComplete?.({ ...result.safetyScore, symbol: result.tokenSymbol });
+          onScanComplete?.({ ...result.safetyScore, symbol: result.tokenSymbol !== '???' ? result.tokenSymbol : `${intent.address.slice(0,6)}...${intent.address.slice(-4)}` });
 
           // If F grade, show block screen
           if (result.safetyScore.grade === 'F') {
@@ -261,7 +261,7 @@ export default function Chat({ onScanComplete }) {
           {
             const result = await runSecurityScan(intent.address);
             replaceLastMessage({ role: 'ai', type: 'safety_card', result });
-            onScanComplete?.({ ...result.safetyScore, symbol: result.tokenSymbol });
+            onScanComplete?.({ ...result.safetyScore, symbol: result.tokenSymbol !== '???' ? result.tokenSymbol : `${intent.address.slice(0,6)}...${intent.address.slice(-4)}` });
 
             // Gemini rephrase in background
             rephraseRisk(result, lang).then((rephrased) => {
