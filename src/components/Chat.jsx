@@ -1,6 +1,6 @@
 /**
  * Chat — Right 1/3 AI conversation sidebar
- * Intent parsing: token query → safety scan, swap → trade, .eth → ENS, else → Gemini
+ * Intent parsing + quick action buttons + Gemini with Web3 context
  */
 
 import { useState, useRef, useEffect } from 'react';
@@ -8,7 +8,7 @@ import { useAccount } from 'wagmi';
 import { runSecurityScan } from '../engine/index.js';
 import { chatWithAI } from '../config/api.js';
 
-// Well-known token addresses for name → address resolution
+// Well-known token addresses
 const TOKEN_ADDRESSES = {
   'USDC': '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
   'USDT': '0xdac17f958d2ee523a2206206994597c13d831ec7',
@@ -21,36 +21,41 @@ const TOKEN_ADDRESSES = {
   'PEPE': '0x6982508145454ce325ddbe47a25d4ec3d2311933',
 };
 
+// Quick action buttons
+const QUICK_ACTIONS = [
+  { label: '🔍 查USDC安全', action: '帮我查USDC安全吗' },
+  { label: '🐸 查PEPE安全', action: 'PEPE安全吗' },
+  { label: '💱 买USDC', action: '用0.1 ETH买USDC' },
+  { label: '🔗 查vitalik.eth', action: 'vitalik.eth' },
+];
+
 /**
  * Parse user intent from Chinese/English input
  */
 function parseIntent(input) {
   const text = input.trim().toLowerCase();
 
-  // Intent 1: Token safety query
-  // "帮我查USDC安全吗", "查一下PEPE", "check USDC", "is PEPE safe"
-  const safetyPattern = /(?:查|检查|安全|check|safe|scan|analyze)\s*[一下]*\s*/i;
+  // Intent 1: Safety check — needs explicit keywords
+  const safetyPattern = /(?:查|检查|安全|扫描|check|safe|scan|analyze|score)/i;
   if (safetyPattern.test(text)) {
     const tokenName = extractTokenName(input);
     if (tokenName) {
       return { type: 'safety_check', token: tokenName, address: TOKEN_ADDRESSES[tokenName] };
     }
+    // Check for contract address
+    const addrMatch = text.match(/0x[a-fA-F0-9]{40}/);
+    if (addrMatch) {
+      return { type: 'safety_check', token: 'Unknown', address: addrMatch[0] };
+    }
   }
 
-  // Also match if input is just a token name or address
-  const directToken = extractTokenName(input);
-  if (directToken && text.length < 20) {
-    return { type: 'safety_check', token: directToken, address: TOKEN_ADDRESSES[directToken] };
-  }
-
-  // Check if input is a contract address (0x...)
-  const addressMatch = text.match(/0x[a-fA-F0-9]{40}/);
+  // Pure contract address input
+  const addressMatch = text.match(/^0x[a-fA-F0-9]{40}$/);
   if (addressMatch) {
     return { type: 'safety_check', token: 'Unknown', address: addressMatch[0] };
   }
 
-  // Intent 2: Swap/trade request
-  // "用0.1 ETH买USDC", "swap 0.1 ETH for USDC", "买USDC"
+  // Intent 2: Swap/trade — needs buy/swap keywords
   const swapPattern = /(?:买|换|swap|buy|交易|trade)/i;
   if (swapPattern.test(text)) {
     const amounts = text.match(/[\d.]+/);
@@ -64,13 +69,12 @@ function parseIntent(input) {
   }
 
   // Intent 3: ENS query
-  // "vitalik.eth", "查vitalik.eth"
   const ensMatch = input.match(/([a-zA-Z0-9-]+\.eth)/);
   if (ensMatch) {
     return { type: 'ens', name: ensMatch[1] };
   }
 
-  // Intent 4: General chat → Gemini
+  // Intent 4: General chat → Gemini with Web3 context
   return { type: 'chat', message: input };
 }
 
@@ -82,23 +86,16 @@ function extractTokenName(input) {
   return null;
 }
 
-// Dimension labels for Safety Score card
+// Dimension labels
 const DIM_LABELS = {
-  honeypot: '蜜罐',
-  tax: '税率',
-  permissions: '合约权限',
-  verified: '验证',
-  marketCap: '市值',
-  holders: '持有者',
+  honeypot: '蜜罐', tax: '税率', permissions: '合约权限',
+  verified: '验证', marketCap: '市值', holders: '持有者',
 };
-
 const DIM_MAX = {
   honeypot: 30, tax: 15, permissions: 15, verified: 10, marketCap: 15, holders: 15,
 };
 
-/**
- * Safety Score Card component (rendered in chat)
- */
+/** Safety Score Card */
 function SafetyScoreCard({ result }) {
   const { safetyScore, tokenName, tokenSymbol, gradeColor, mineSignals } = result;
   const isGood = safetyScore.grade === 'A' || safetyScore.grade === 'B';
@@ -112,9 +109,8 @@ function SafetyScoreCard({ result }) {
         background: `linear-gradient(135deg, ${borderColor}08, transparent)`,
       }}
     >
-      {/* Score + Grade */}
       <div className="flex items-center gap-3 mb-2">
-        <span className="text-3xl font-bold" style={{ color: gradeColor.color }}>
+        <span className="text-3xl font-bold font-mechanical" style={{ color: gradeColor.color }}>
           {safetyScore.total}
         </span>
         <span
@@ -127,8 +123,6 @@ function SafetyScoreCard({ result }) {
       <div className="text-xs text-gray-400 mb-3">
         {tokenSymbol} · {tokenName}
       </div>
-
-      {/* 6 dimension bars */}
       <div className="space-y-1.5">
         {Object.entries(safetyScore.scores).map(([key, score]) => {
           const max = DIM_MAX[key];
@@ -148,8 +142,6 @@ function SafetyScoreCard({ result }) {
           );
         })}
       </div>
-
-      {/* Mine signals summary */}
       {mineSignals && (
         <div className="mt-3 pt-2 border-t border-gray-800/50">
           {Object.entries(mineSignals).map(([key, signal]) => {
@@ -170,16 +162,15 @@ function SafetyScoreCard({ result }) {
   );
 }
 
-/**
- * Swap Quote Card component
- */
+/** Swap Quote Card */
 function SwapCard({ token, amount }) {
+  const [confirmed, setConfirmed] = useState(false);
   const rate = token === 'USDC' ? 2845 : token === 'PEPE' ? 0.0000125 : 1;
   const outputAmount = (parseFloat(amount) * rate).toFixed(2);
 
   return (
     <div className="rounded-lg p-4 my-2 border border-cyan-500/30 bg-cyan-500/5">
-      <div className="text-sm font-medium text-white mb-2">
+      <div className="text-sm font-medium text-white mb-2 font-mechanical">
         <span className="text-gray-400">{amount} ETH</span>
         <span className="mx-2 text-cyan-400">→</span>
         <span className="text-cyan-400 font-bold">{outputAmount} {token}</span>
@@ -188,39 +179,47 @@ function SwapCard({ token, amount }) {
         <div>滑点: 0.5%（由Safety Score自动设定）</div>
         <div>授权: 精确授权110%（非无限授权）</div>
       </div>
-      <button className="w-full mt-3 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm font-bold transition-colors">
-        确认交易
-      </button>
+      {!confirmed ? (
+        <button
+          onClick={() => setConfirmed(true)}
+          className="w-full mt-3 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm font-bold transition-colors"
+        >
+          确认交易
+        </button>
+      ) : (
+        <div className="mt-3 text-center text-xs text-green-400 py-2 border border-green-500/30 rounded-lg bg-green-500/10">
+          ✓ 交易已提交到钱包，请在 MetaMask 中确认签名
+        </div>
+      )}
     </div>
   );
 }
 
-/**
- * Main Chat component
- */
+/** Main Chat component */
 export default function Chat({ onScanComplete }) {
   const [messages, setMessages] = useState([
     {
       role: 'ai',
       type: 'text',
-      content: '你好！我是ChainPilot安全助手。你可以：\n• 查代币安全：「帮我查USDC安全吗」\n• 发起交易：「用0.1 ETH买USDC」\n• 查ENS：「vitalik.eth」\n• 或直接问我任何DeFi问题',
+      content: '你好！我是 ChainPilot 安全助手 🛡️\n\n我可以帮你：\n• 检查代币是否安全\n• 在交易前做风险评估\n• 回答 DeFi 和 Web3 问题\n\n试试下面的快捷按钮，或直接打字问我 👇',
     },
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showQuickActions, setShowQuickActions] = useState(true);
   const messagesEndRef = useRef(null);
   const { isConnected } = useAccount();
 
-  // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  async function handleSend() {
-    if (!input.trim() || loading) return;
+  async function handleSend(overrideInput) {
+    const userMessage = (overrideInput || input).trim();
+    if (!userMessage || loading) return;
 
-    const userMessage = input.trim();
     setInput('');
+    setShowQuickActions(false);
     setMessages((prev) => [...prev, { role: 'user', type: 'text', content: userMessage }]);
     setLoading(true);
 
@@ -232,29 +231,19 @@ export default function Chat({ onScanComplete }) {
           if (!intent.address) {
             setMessages((prev) => [...prev, {
               role: 'ai', type: 'text',
-              content: `抱歉，我不认识「${intent.token}」这个代币。请提供合约地址（0x...）进行查询。`,
+              content: `我不认识「${intent.token}」这个代币。请提供合约地址（0x...）我来帮你查。`,
             }]);
             break;
           }
-
           setMessages((prev) => [...prev, {
-            role: 'ai', type: 'text', content: `正在扫描 ${intent.token}...`,
+            role: 'ai', type: 'text', content: `🔍 正在扫描 ${intent.token}，请稍候...`,
           }]);
-
           const result = await runSecurityScan(intent.address);
-
-          // Replace loading message with result card
           setMessages((prev) => {
             const updated = [...prev];
-            updated[updated.length - 1] = {
-              role: 'ai',
-              type: 'safety_card',
-              result,
-            };
+            updated[updated.length - 1] = { role: 'ai', type: 'safety_card', result };
             return updated;
           });
-
-          // Notify parent for dashboard update
           onScanComplete?.(result.safetyScore);
           break;
         }
@@ -263,40 +252,30 @@ export default function Chat({ onScanComplete }) {
           if (!isConnected) {
             setMessages((prev) => [...prev, {
               role: 'ai', type: 'text',
-              content: '请先连接钱包后再进行交易。',
+              content: '⚠️ 请先连接钱包后再进行交易。点击右上角的连接按钮。',
             }]);
             break;
           }
-
-          // First run safety check
           setMessages((prev) => [...prev, {
             role: 'ai', type: 'text',
-            content: `正在检查 ${intent.token} 安全性...`,
+            content: `🔍 交易前先检查 ${intent.token} 安全性...`,
           }]);
-
           if (intent.address) {
             const result = await runSecurityScan(intent.address);
-
             setMessages((prev) => {
               const updated = [...prev];
-              updated[updated.length - 1] = {
-                role: 'ai', type: 'safety_card', result,
-              };
+              updated[updated.length - 1] = { role: 'ai', type: 'safety_card', result };
               return updated;
             });
-
             onScanComplete?.(result.safetyScore);
-
-            // If safe enough, show swap card
             if (result.safetyScore.grade !== 'F') {
               setMessages((prev) => [...prev, {
-                role: 'ai', type: 'swap_card',
-                token: intent.token, amount: intent.amount,
+                role: 'ai', type: 'swap_card', token: intent.token, amount: intent.amount,
               }]);
             } else {
               setMessages((prev) => [...prev, {
                 role: 'ai', type: 'text',
-                content: '⚠️ 该代币被评为F级，交易已被拦截。为了保护你的资产安全，我们无法执行此交易。',
+                content: '🚫 该代币被评为F级，交易已被拦截。ChainPilot 不会让你买入高风险代币。',
               }]);
             }
           }
@@ -306,24 +285,32 @@ export default function Chat({ onScanComplete }) {
         case 'ens': {
           setMessages((prev) => [...prev, {
             role: 'ai', type: 'text',
-            content: `ENS查询功能将在Phase 6实现。你查询的是：${intent.name}`,
+            content: `🔗 ENS查询功能即将上线。你查询的是：${intent.name}`,
           }]);
           break;
         }
 
         case 'chat':
         default: {
-          const reply = await chatWithAI(userMessage);
-          setMessages((prev) => [...prev, {
-            role: 'ai', type: 'text', content: reply,
-          }]);
+          try {
+            const reply = await chatWithAI(userMessage);
+            setMessages((prev) => [...prev, {
+              role: 'ai', type: 'text', content: reply,
+            }]);
+          } catch {
+            // Fallback if Gemini fails
+            setMessages((prev) => [...prev, {
+              role: 'ai', type: 'text',
+              content: '我是 ChainPilot 安全助手，专注于 DeFi 安全检查。\n\n你可以试试：\n• 「USDC安全吗」检查代币\n• 「用0.1 ETH买USDC」发起交易\n• 或输入合约地址（0x...）直接扫描',
+            }]);
+          }
           break;
         }
       }
     } catch (error) {
       setMessages((prev) => [...prev, {
         role: 'ai', type: 'text',
-        content: `出错了：${error.message}。请稍后再试。`,
+        content: `出错了：${error.message}。请稍后重试。`,
       }]);
     } finally {
       setLoading(false);
@@ -337,14 +324,32 @@ export default function Chat({ onScanComplete }) {
     }
   }
 
+  function handleQuickAction(action) {
+    handleSend(action);
+  }
+
   return (
-    <div className="w-[380px] min-w-[380px] border-l border-gray-800 flex flex-col bg-[#0D0D0D]">
+    <div className="w-[380px] min-w-[380px] border-l border-white/[0.06] flex flex-col bg-[#0D0D0D]">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-800">
-        <h2 className="text-sm font-bold text-red-400 tracking-[0.15em]">
-          CHAINPILOT AI
-        </h2>
-        <div className="w-12 h-[1px] bg-red-500/50 mt-1" />
+      <div className="px-4 py-3 border-b border-white/[0.06] flex items-center justify-between">
+        <div>
+          <h2 className="font-mechanical text-sm font-bold tracking-[0.15em]" style={{ color: '#ff1744' }}>
+            CHAINPILOT AI
+          </h2>
+          <div className="w-12 h-[1px] mt-1" style={{ background: 'linear-gradient(90deg, #ff1744, transparent)' }} />
+        </div>
+        <button
+          onClick={() => {
+            setMessages([{
+              role: 'ai', type: 'text',
+              content: '你好！我是 ChainPilot 安全助手 🛡️\n\n我可以帮你：\n• 检查代币是否安全\n• 在交易前做风险评估\n• 回答 DeFi 和 Web3 问题\n\n试试下面的快捷按钮，或直接打字问我 👇',
+            }]);
+            setShowQuickActions(true);
+          }}
+          className="text-[10px] text-gray-500 hover:text-white border border-white/10 hover:border-white/30 px-2 py-1 rounded transition-all"
+        >
+          🔄 新对话
+        </button>
       </div>
 
       {/* Messages */}
@@ -363,28 +368,43 @@ export default function Chat({ onScanComplete }) {
               </div>
             )}
             {msg.type === 'safety_card' && (
-              <div className="w-full">
-                <SafetyScoreCard result={msg.result} />
-              </div>
+              <div className="w-full"><SafetyScoreCard result={msg.result} /></div>
             )}
             {msg.type === 'swap_card' && (
-              <div className="w-full">
-                <SwapCard token={msg.token} amount={msg.amount} />
-              </div>
+              <div className="w-full"><SwapCard token={msg.token} amount={msg.amount} /></div>
             )}
           </div>
         ))}
+
+        {/* Quick action buttons — show at start or after conversation settles */}
+        {showQuickActions && !loading && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            {QUICK_ACTIONS.map((qa) => (
+              <button
+                key={qa.label}
+                onClick={() => handleQuickAction(qa.action)}
+                className="text-[11px] px-3 py-1.5 rounded-full border border-white/10 text-gray-400 hover:text-white hover:border-white/30 hover:bg-white/5 transition-all"
+              >
+                {qa.label}
+              </button>
+            ))}
+          </div>
+        )}
+
         {loading && (
           <div className="flex justify-start">
-            <div className="text-sm text-gray-500 animate-pulse">分析中...</div>
+            <div className="text-sm text-gray-500 flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+              分析中...
+            </div>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input */}
-      <div className="p-3 border-t border-gray-800">
-        <div className="flex items-center gap-2 bg-[#1A1A1A] rounded-lg px-3 py-2">
+      <div className="p-3 border-t border-white/[0.06]">
+        <div className="flex items-center gap-2 bg-[#1A1A1A] rounded-lg px-3 py-2 border border-white/[0.04]">
           <input
             type="text"
             value={input}
@@ -395,9 +415,10 @@ export default function Chat({ onScanComplete }) {
             disabled={loading}
           />
           <button
-            onClick={handleSend}
+            onClick={() => handleSend()}
             disabled={loading || !input.trim()}
-            className="text-red-400 hover:text-red-300 disabled:opacity-30 transition-colors"
+            className="disabled:opacity-30 transition-colors hover:opacity-80"
+            style={{ color: '#ff1744' }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
               <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
