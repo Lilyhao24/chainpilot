@@ -28,17 +28,26 @@ const TOKEN_ADDRESSES = {
   'PEPE': '0x6982508145454ce325ddbe47a25d4ec3d2311933',
 };
 
-const QUICK_ACTIONS = [
-  { label: '🔍 查USDC安全', action: '帮我查USDC安全吗' },
-  { label: '🐸 查PEPE安全', action: 'PEPE安全吗' },
-  { label: '💱 买USDC', action: '用0.1 ETH买USDC' },
-  { label: '🔗 vitalik.eth', action: 'vitalik.eth' },
-];
+function getQuickActions(lang) {
+  return lang === 'zh' ? [
+    { label: '🔍 查USDC安全', action: '帮我查USDC安全吗' },
+    { label: '🐸 查PEPE安全', action: 'PEPE安全吗' },
+    { label: '💱 买USDC', action: '用0.1 ETH买USDC' },
+    { label: '🔗 vitalik.eth', action: 'vitalik.eth' },
+  ] : [
+    { label: '🔍 Check USDC', action: 'check USDC safe' },
+    { label: '🐸 Check PEPE', action: 'scan PEPE' },
+    { label: '💱 Buy USDC', action: 'buy USDC with 0.1 ETH' },
+    { label: '🔗 vitalik.eth', action: 'vitalik.eth' },
+  ];
+}
 
-const WELCOME_MSG = {
-  role: 'ai', type: 'text',
-  content: '你好！我是 ChainPilot 安全助手 🛡️\n\n我可以帮你：\n• 检查代币是否安全\n• 在交易前做风险评估\n• 查询 ENS 域名信息\n• 回答 DeFi 和 Web3 问题\n\n试试下面的快捷按钮，或直接打字问我 👇',
-};
+function getWelcomeMsg(t) {
+  return {
+    role: 'ai', type: 'text',
+    content: `${t.welcomeTitle} \n\n${t.welcomeBody}`,
+  };
+}
 
 function parseIntent(input) {
   const text = input.trim().toLowerCase();
@@ -85,8 +94,8 @@ function extractTokenName(input) {
 }
 
 export default function Chat({ onScanComplete }) {
-  const { t } = useLanguage();
-  const [messages, setMessages] = useState([WELCOME_MSG]);
+  const { lang, t } = useLanguage();
+  const [messages, setMessages] = useState([getWelcomeMsg(t)]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(true);
@@ -244,7 +253,7 @@ export default function Chat({ onScanComplete }) {
   }
 
   function resetChat() {
-    setMessages([WELCOME_MSG]);
+    setMessages([getWelcomeMsg(t)]);
     setShowQuickActions(true);
     setBlockScreen(null);
   }
@@ -325,7 +334,7 @@ export default function Chat({ onScanComplete }) {
 
         {showQuickActions && !loading && (
           <div className="flex flex-wrap gap-2 mt-2">
-            {QUICK_ACTIONS.map((qa, i) => (
+            {getQuickActions(lang).map((qa, i) => (
               <button
                 key={qa.label}
                 onClick={() => handleSend(qa.action)}
