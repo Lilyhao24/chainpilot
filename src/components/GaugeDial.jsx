@@ -17,6 +17,8 @@ const glowMap = {
   cyan: 'rgba(0, 229, 255, 0.2)',
 };
 
+import { useState } from 'react';
+
 export default function GaugeDial({
   label,
   value,
@@ -26,8 +28,10 @@ export default function GaugeDial({
   icon,
   badge,
   onClick,
+  tooltip,
   size = 180,
 }) {
+  const [showTooltip, setShowTooltip] = useState(false);
   const strokeWidth = 8;
   const radius = (size - strokeWidth) / 2 - 15;
   const circumference = 2 * Math.PI * radius;
@@ -39,8 +43,10 @@ export default function GaugeDial({
 
   return (
     <div
-      className="flex flex-col items-center cursor-pointer group"
+      className="flex flex-col items-center cursor-pointer group relative"
       onClick={onClick}
+      onMouseEnter={() => setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
     >
       {/* Red decorative line on top */}
       <div
@@ -166,6 +172,19 @@ export default function GaugeDial({
       <div className="font-mechanical text-[10px] text-gray-500 mt-3 tracking-[0.2em] uppercase">
         {label}
       </div>
+
+      {/* Tooltip */}
+      {tooltip && showTooltip && (
+        <div
+          className="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
+          style={{ animation: 'fadeIn 0.3s ease-out' }}
+        >
+          <div className="relative bg-[#1A1A1A]/95 backdrop-blur-sm border border-white/10 rounded-lg px-3 py-2 text-[11px] text-gray-300 max-w-[200px] text-center leading-relaxed shadow-xl">
+            <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 bg-[#1A1A1A]/95 border-l border-t border-white/10" />
+            {tooltip}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

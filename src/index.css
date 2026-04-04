@@ -86,6 +86,12 @@ body {
 .grade-c { background: #D85A30; color: #fff; }
 .grade-f { background: #E24B4A; color: #fff; }
 
+/* Fade in animation for tooltips */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* Pulse animation for live indicator */
 @keyframes pulse-glow {
   0%, 100% { opacity: 1; box-shadow: 0 0 4px currentColor; }

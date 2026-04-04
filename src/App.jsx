@@ -7,6 +7,7 @@ function App() {
   const [lastScan, setLastScan] = useState(null);
   const [scanCount, setScanCount] = useState(0);
   const [blockCount, setBlockCount] = useState(0);
+  const [scanHistory, setScanHistory] = useState([]);
 
   function handleScanComplete(safetyScore) {
     setLastScan(safetyScore);
@@ -14,6 +15,10 @@ function App() {
     if (safetyScore.grade === 'F') {
       setBlockCount((c) => c + 1);
     }
+    setScanHistory((prev) => [
+      { total: safetyScore.total, grade: safetyScore.grade, symbol: safetyScore.symbol || '??' },
+      ...prev.slice(0, 9), // Keep last 10
+    ]);
   }
 
   return (
@@ -53,6 +58,7 @@ function App() {
           lastScan={lastScan}
           scanCount={scanCount}
           blockCount={blockCount}
+          scanHistory={scanHistory}
         />
         <Chat onScanComplete={handleScanComplete} />
       </div>
