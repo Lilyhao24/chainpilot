@@ -279,7 +279,7 @@ export default function Chat({ onScanComplete }) {
       <div className="px-4 py-3 border-b border-white/[0.06] flex items-center justify-between" style={{ background: 'rgba(23,23,30,0.5)', backdropFilter: 'blur(8px)' }}>
         <div className="flex items-center gap-2">
           <Shield className="w-4 h-4" style={{ color: '#1D9E75' }} />
-          <h2 className="font-mechanical text-sm font-bold tracking-[0.15em]" style={{ color: '#ff1744' }}>
+          <h2 className="font-mechanical text-lg font-bold tracking-[0.15em]" style={{ color: '#ff1744' }}>
             {t.chatTitle}
           </h2>
         </div>

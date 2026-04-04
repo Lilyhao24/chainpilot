@@ -57,41 +57,40 @@ function MetricCard({ title, value, unit, change, color = 'red', positive = true
   const c = colorMap[color];
   return (
     <div
-      className="relative p-4 rounded-lg overflow-hidden backdrop-blur-sm"
+      className="relative p-5 rounded-lg overflow-hidden backdrop-blur-sm"
       style={{
         background: 'linear-gradient(135deg, rgba(26,26,26,0.8), rgba(15,15,15,0.8))',
-        border: `1px solid ${c}25`,
-        boxShadow: `0 0 20px ${c}10, inset 0 0 20px ${c}05`,
+        border: `1px solid ${c}40`,
+        boxShadow: `0 0 20px ${c}20, inset 0 0 20px ${c}05`,
       }}
     >
-      {/* Subtle background texture */}
-      <div className="absolute inset-0 opacity-5 pointer-events-none"
+      {/* Background texture */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none"
         style={{
           backgroundImage: `repeating-linear-gradient(90deg, transparent, transparent 1px, ${c}, ${c} 2px)`,
           backgroundSize: '4px 100%',
         }}
       />
       <div className="relative z-10">
-        <div className="font-mechanical text-[10px] uppercase tracking-[0.15em] text-gray-500 mb-2">
+        <div className="font-mechanical text-xs uppercase tracking-widest text-gray-400 mb-3">
           {title}
         </div>
-        <div className="flex items-baseline gap-1.5 mb-1">
+        <div className="flex items-baseline gap-2 mb-2">
           <span
-            className="font-mechanical text-2xl font-black tracking-tight"
-            style={{ color: c, textShadow: `0 0 10px ${c}60` }}
+            className="font-black text-3xl tracking-tight"
+            style={{ color: c, textShadow: `0 0 10px ${c}60`, fontFamily: "'JetBrains Mono', monospace" }}
           >
             {value}
           </span>
-          <span className="text-xs text-gray-600">{unit}</span>
+          <span className="text-sm text-gray-500">{unit}</span>
         </div>
-        <div className={`text-xs font-mechanical ${positive ? 'text-green-400' : 'text-red-400'}`}>
-          {positive ? '▲' : '▼'} {change}
+        <div className={`text-sm font-mechanical tracking-wider ${positive ? 'text-green-400' : 'text-red-400'}`}>
+          {positive ? '↑ ' : '↓ '}{change}
         </div>
       </div>
       {/* Bottom accent line */}
-      <div
-        className="absolute bottom-0 left-0 right-0 h-[1px]"
-        style={{ background: `linear-gradient(90deg, ${c}, transparent)`, opacity: 0.5 }}
+      <div className="absolute bottom-0 left-0 right-0 h-[2px]"
+        style={{ background: `linear-gradient(90deg, ${c}, transparent)`, opacity: 0.6 }}
       />
     </div>
   );
@@ -266,7 +265,7 @@ export default function Dashboard({ lastScan, scanCount = 0, blockCount = 0, sca
         {/* Recent Transactions */}
         <div className="data-card">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-mechanical text-xs tracking-[0.15em] text-glow-orange uppercase" style={{ color: '#ff9100' }}>
+            <h3 className="font-mechanical text-lg tracking-[0.15em] text-glow-orange uppercase" style={{ color: '#ff9100' }}>
               {t.recentTx}
             </h3>
             <div className="w-2 h-2 rounded-full pulse-glow" style={{ backgroundColor: '#ff1744', color: '#ff1744' }} />

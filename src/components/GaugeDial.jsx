@@ -187,22 +187,22 @@ export default function GaugeDial({
 
           {/* Center content overlay */}
           <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               <span
-                className="font-mechanical text-xl font-bold"
-                style={{ color: mainColor, textShadow: `0 0 10px ${mainColor}50` }}
+                className="metric-display"
+                style={{ color: mainColor, textShadow: `0 0 12px ${mainColor}50`, fontSize: '1.75rem' }}
               >
                 {value}
               </span>
               {badge && (
-                <span className="text-[9px] px-1.5 py-0.5 rounded font-bold"
+                <span className="text-[10px] px-2 py-0.5 rounded font-bold"
                   style={{ backgroundColor: badge.bg, color: badge.color }}>
                   {badge.text}
                 </span>
               )}
             </div>
             {subValue && (
-              <div className="text-[9px] text-gray-400 mt-0.5 text-center max-w-[110px] font-mechanical leading-tight">
+              <div className="text-[11px] text-gray-400 mt-1 text-center max-w-[120px] font-mechanical leading-tight">
                 {subValue}
               </div>
             )}
@@ -221,7 +221,7 @@ export default function GaugeDial({
         style={{ background: 'radial-gradient(circle, #666 30%, #444 70%)', boxShadow: '0 0 4px rgba(0,0,0,0.5)' }} />
 
       {/* Label */}
-      <div className="font-mechanical text-[10px] text-gray-500 mt-3 tracking-[0.2em] uppercase">
+      <div className="font-mechanical text-xs text-gray-400 mt-3 tracking-widest uppercase">
         {label}
       </div>
 
