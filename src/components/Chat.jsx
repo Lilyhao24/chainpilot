@@ -397,10 +397,10 @@ export default function Chat({ onScanComplete }) {
                   }}
                 >
                   <div className="text-xs font-mechanical mb-2" style={{ color: msg.grade === 'C' ? '#D85A30' : '#BA7517' }}>
-                    ⚠ 后果模拟
+                    ⚠ {lang === 'en' ? 'Consequence Simulation' : '后果模拟'}
                   </div>
-                  <div className="text-sm text-white mb-2">{msg.consequence.display}</div>
-                  <div className="text-[9px] text-gray-600">{msg.consequence.disclaimer}</div>
+                  <div className="text-sm text-white mb-2">{lang === 'en' ? msg.consequence.displayEn : msg.consequence.display}</div>
+                  <div className="text-[9px] text-gray-600">{lang === 'en' ? msg.consequence.disclaimerEn : msg.consequence.disclaimer}</div>
                 </div>
               </div>
             )}

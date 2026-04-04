@@ -8,7 +8,7 @@ import { simulateConsequence } from '../engine/rules.js';
 import { useLanguage } from '../contexts/LanguageContext.jsx';
 
 export default function BlockScreen({ result, onDismiss }) {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const { safetyScore, tokenName, tokenSymbol, mineSignals, marketCap } = result;
 
   let blockReason = t.txBlocked;
@@ -75,8 +75,8 @@ export default function BlockScreen({ result, onDismiss }) {
             <div className="space-y-2">
               <h3 className="text-[10px] font-semibold text-gray-500 tracking-widest font-mechanical">{t.riskSim}</h3>
               <div className="p-3 rounded-lg border border-white/[0.06]" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                <div className="text-base text-white mb-2 font-medium">{consequence.display}</div>
-                <div className="text-[10px] text-gray-600">{consequence.disclaimer}</div>
+                <div className="text-base text-white mb-2 font-medium">{lang === 'en' ? consequence.displayEn : consequence.display}</div>
+                <div className="text-[10px] text-gray-600">{lang === 'en' ? consequence.disclaimerEn : consequence.disclaimer}</div>
               </div>
             </div>
 
