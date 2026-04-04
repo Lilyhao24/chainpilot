@@ -103,6 +103,16 @@ export default function Chat({ onScanComplete }) {
   const messagesEndRef = useRef(null);
   const { isConnected } = useAccount();
 
+  // Update welcome message when language changes
+  useEffect(() => {
+    setMessages((prev) => {
+      if (prev.length === 1 && prev[0].role === 'ai' && prev[0].type === 'text') {
+        return [getWelcomeMsg(t)];
+      }
+      return prev;
+    });
+  }, [lang, t]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
