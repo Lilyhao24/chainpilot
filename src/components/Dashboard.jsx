@@ -76,11 +76,17 @@ function getInfoCards(t) {
   ];
 }
 
-const DEMO_TRANSACTIONS = [
-  { type: 'BUY', token: 'USDC', detail: '284.50 USDC · 0.1 ETH', time: '2 mins ago' },
-  { type: 'SELL', token: 'ETH', detail: '2.0 ETH · $5,690', time: '15 mins ago' },
-  { type: 'BUY', token: 'PEPE', detail: '1,000,000 PEPE · $12.50', time: '1 hour ago' },
-];
+function getDemoTx(lang) {
+  return lang === 'zh' ? [
+    { type: 'BUY', token: 'USDC', detail: '284.50 USDC · 0.1 ETH', time: '2 分钟前' },
+    { type: 'SELL', token: 'ETH', detail: '2.0 ETH · $5,690', time: '15 分钟前' },
+    { type: 'BUY', token: 'PEPE', detail: '1,000,000 PEPE · $12.50', time: '1 小时前' },
+  ] : [
+    { type: 'BUY', token: 'USDC', detail: '284.50 USDC · 0.1 ETH', time: '2 mins ago' },
+    { type: 'SELL', token: 'ETH', detail: '2.0 ETH · $5,690', time: '15 mins ago' },
+    { type: 'BUY', token: 'PEPE', detail: '1,000,000 PEPE · $12.50', time: '1 hour ago' },
+  ];
+}
 
 function getTooltips(lang) {
   return lang === 'zh' ? {
@@ -238,7 +244,7 @@ export default function Dashboard({ lastScan, scanCount = 0, blockCount = 0, sca
           </div>
 
           <div className="space-y-1">
-            {DEMO_TRANSACTIONS.map((tx, i) => (
+            {getDemoTx(lang).map((tx, i) => (
               <div
                 key={i}
                 className="flex items-center justify-between py-2.5 border-b border-white/5 last:border-0"

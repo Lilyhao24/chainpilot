@@ -31,11 +31,11 @@ function AppContent() {
       {/* Top Bar */}
       <header className="flex items-center justify-between px-6 py-3 border-b border-white/[0.06] shrink-0 bg-[#0D0D0D]">
         <div className="flex items-center gap-6">
-          <h1 className="font-mechanical text-4xl font-bold tracking-[0.3em] text-glow-red" style={{ color: '#ff1744' }}>
+          <h1 className="font-display text-4xl text-glow-red" style={{ color: '#ff1744' }}>
             CHAINPILOT
           </h1>
           <div className="hidden md:flex flex-col">
-            <span className="font-mechanical text-lg tracking-[0.3em] text-gray-300 font-medium">
+            <span className="font-display text-lg text-gray-300">
               {t.tagline}
             </span>
             <div className="flex items-center gap-3 mt-1 text-[10px] font-mechanical tracking-wider text-gray-500">
