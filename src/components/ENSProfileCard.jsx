@@ -13,7 +13,7 @@ import { useLanguage } from '../contexts/LanguageContext.jsx';
 // Public client for ENS resolution — fallback chain for reliability
 const publicClient = createPublicClient({
   chain: mainnet,
-  transport: http('https://cloudflare-eth.com'),
+  transport: http('https://1rpc.io/eth'),
 });
 
 export default function ENSProfileCard({ name }) {
