@@ -103,13 +103,32 @@ export default function Chat({ onScanComplete }) {
   const messagesEndRef = useRef(null);
   const { isConnected } = useAccount();
 
-  // Update welcome message when language changes
+  // Update welcome message + re-rephrase safety cards when language changes
   useEffect(() => {
     setMessages((prev) => {
       if (prev.length === 1 && prev[0].role === 'ai' && prev[0].type === 'text') {
         return [getWelcomeMsg(t)];
       }
-      return prev;
+      // Clear rephrasedRisk on existing safety cards so it re-fetches
+      const updated = prev.map(m => {
+        if (m.type === 'safety_card' && m.result?.rephrasedRisk) {
+          return { ...m, result: { ...m.result, rephrasedRisk: null } };
+        }
+        return m;
+      });
+      // Re-trigger rephrase for each safety card
+      updated.forEach(m => {
+        if (m.type === 'safety_card' && m.result) {
+          rephraseRisk(m.result, lang).then((rephrased) => {
+            setMessages(p => p.map(msg =>
+              msg.type === 'safety_card' && msg.result?.address === m.result.address
+                ? { ...msg, result: { ...msg.result, rephrasedRisk: rephrased } }
+                : msg
+            ));
+          });
+        }
+      });
+      return updated;
     });
   }, [lang, t]);
 
