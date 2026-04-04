@@ -19,8 +19,10 @@ const publicClient = createPublicClient({
  */
 export async function checkDeployerENS(deployerAddress) {
   if (!deployerAddress) {
-    return { hasEns: false, ensName: null, address: null, display: '部署者身份：未知' };
+    return { hasEns: false, ensName: null, address: null, display: '部署者身份：未知', displayEn: 'Deployer: Unknown' };
   }
+
+  const short = `${deployerAddress.slice(0, 6)}...${deployerAddress.slice(-4)}`;
 
   try {
     const ensName = await publicClient.getEnsName({ address: deployerAddress });
@@ -30,8 +32,8 @@ export async function checkDeployerENS(deployerAddress) {
         hasEns: true,
         ensName,
         address: deployerAddress,
-        display: `部署者身份：已验证ENS (${ensName})`,
-        displayEn: `Deployer identity: Verified ENS (${ensName})`,
+        display: `部署者：${ensName}（已验证ENS）`,
+        displayEn: `Deployer: ${ensName} (ENS verified)`,
       };
     }
 
@@ -39,16 +41,16 @@ export async function checkDeployerENS(deployerAddress) {
       hasEns: false,
       ensName: null,
       address: deployerAddress,
-      display: '部署者身份：匿名地址',
-      displayEn: 'Deployer identity: Anonymous address',
+      display: `部署者：${short}（未注册ENS）`,
+      displayEn: `Deployer: ${short} (no ENS registered)`,
     };
   } catch {
     return {
       hasEns: false,
       ensName: null,
       address: deployerAddress,
-      display: '部署者身份：匿名地址',
-      displayEn: 'Deployer identity: Anonymous address',
+      display: `部署者：${short}（未注册ENS）`,
+      displayEn: `Deployer: ${short} (no ENS registered)`,
     };
   }
 }
