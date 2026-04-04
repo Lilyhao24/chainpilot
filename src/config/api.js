@@ -34,7 +34,7 @@ export async function getMarketData(address) {
   return res.json();
 }
 
-export async function rephraseRisk(scanResult) {
+export async function rephraseRisk(scanResult, lang = 'zh') {
   try {
     const res = await fetch(`${API_BASE}/api/rephrase`, {
       method: 'POST',
@@ -45,11 +45,13 @@ export async function rephraseRisk(scanResult) {
         mineSignals: scanResult.mineSignals,
         tokenSymbol: scanResult.tokenSymbol,
         slippage: scanResult.slippage,
+        lang,
       }),
     });
     const data = await res.json();
-    return data.rephrased || scanResult.riskTemplate.zh;
+    const fallback = lang === 'en' ? scanResult.riskTemplate.en : scanResult.riskTemplate.zh;
+    return data.rephrased || fallback;
   } catch {
-    return scanResult.riskTemplate.zh;
+    return lang === 'en' ? scanResult.riskTemplate.en : scanResult.riskTemplate.zh;
   }
 }

@@ -159,7 +159,7 @@ export default function Chat({ onScanComplete }) {
           }
 
           // Gemini rephrase — runs in background, updates card when done
-          rephraseRisk(result).then((rephrased) => {
+          rephraseRisk(result, lang).then((rephrased) => {
             setMessages(prev => prev.map(m =>
               m.type === 'safety_card' && m.result.address === result.address
                 ? { ...m, result: { ...m.result, rephrasedRisk: rephrased } }
@@ -182,7 +182,7 @@ export default function Chat({ onScanComplete }) {
             onScanComplete?.({ ...result.safetyScore, symbol: result.tokenSymbol });
 
             // Gemini rephrase in background
-            rephraseRisk(result).then((rephrased) => {
+            rephraseRisk(result, lang).then((rephrased) => {
               setMessages(prev => prev.map(m =>
                 m.type === 'safety_card' && m.result.address === result.address
                   ? { ...m, result: { ...m.result, rephrasedRisk: rephrased } }
