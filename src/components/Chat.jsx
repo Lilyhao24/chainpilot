@@ -5,8 +5,8 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAccount } from 'wagmi';
-import { runSecurityScan } from '../engine/index.js';
-import { chatWithAI } from '../config/api.js';
+import { runSecurityScan, simulateConsequence } from '../engine/index.js';
+import { chatWithAI, rephraseRisk } from '../config/api.js';
 import SafetyScoreCard from './SafetyScoreCard.jsx';
 import SwapCard from './SwapCard.jsx';
 import ENSProfileCard from './ENSProfileCard.jsx';
@@ -135,6 +135,15 @@ export default function Chat({ onScanComplete }) {
           if (result.safetyScore.grade === 'F') {
             setBlockScreen(result);
           }
+
+          // Gemini rephrase — runs in background, updates card when done
+          rephraseRisk(result).then((rephrased) => {
+            setMessages(prev => prev.map(m =>
+              m.type === 'safety_card' && m.result.address === result.address
+                ? { ...m, result: { ...m.result, rephrasedRisk: rephrased } }
+                : m
+            ));
+          });
           break;
         }
 
@@ -150,6 +159,15 @@ export default function Chat({ onScanComplete }) {
             replaceLastMessage({ role: 'ai', type: 'safety_card', result });
             onScanComplete?.(result.safetyScore);
 
+            // Gemini rephrase in background
+            rephraseRisk(result).then((rephrased) => {
+              setMessages(prev => prev.map(m =>
+                m.type === 'safety_card' && m.result.address === result.address
+                  ? { ...m, result: { ...m.result, rephrasedRisk: rephrased } }
+                  : m
+              ));
+            });
+
             if (result.safetyScore.grade === 'F') {
               setBlockScreen(result);
               addMessage({ role: 'ai', type: 'text', content: '🚫 该代币被评为F级，交易已被拦截。' });
@@ -163,6 +181,15 @@ export default function Chat({ onScanComplete }) {
               else if (result.safetyScore.grade === 'B' && hasWarn) cooldown = 180;
 
               if (cooldown > 0) {
+                // Consequence simulation before countdown
+                const ethAmount = parseFloat(intent.amount);
+                const investUsd = Math.round(ethAmount * 2845); // approximate ETH price
+                const consequence = simulateConsequence(result.marketCap, investUsd);
+                addMessage({
+                  role: 'ai', type: 'consequence',
+                  consequence,
+                  grade: result.safetyScore.grade,
+                });
                 addMessage({
                   role: 'ai', type: 'countdown',
                   seconds: cooldown,
@@ -256,6 +283,23 @@ export default function Chat({ onScanComplete }) {
             {msg.type === 'safety_card' && <div className="w-full"><SafetyScoreCard result={msg.result} /></div>}
             {msg.type === 'swap_card' && <div className="w-full"><SwapCard token={msg.token} amount={msg.amount} slippage={msg.slippage} /></div>}
             {msg.type === 'ens_card' && <div className="w-full"><ENSProfileCard name={msg.name} /></div>}
+            {msg.type === 'consequence' && (
+              <div className="w-full">
+                <div
+                  className="rounded-lg p-4 my-2"
+                  style={{
+                    border: `1px solid ${msg.grade === 'C' ? 'rgba(216, 90, 48, 0.3)' : 'rgba(186, 117, 23, 0.3)'}`,
+                    background: `linear-gradient(135deg, ${msg.grade === 'C' ? 'rgba(216, 90, 48, 0.08)' : 'rgba(186, 117, 23, 0.08)'}, transparent)`,
+                  }}
+                >
+                  <div className="text-xs font-mechanical mb-2" style={{ color: msg.grade === 'C' ? '#D85A30' : '#BA7517' }}>
+                    ⚠ 后果模拟
+                  </div>
+                  <div className="text-sm text-white mb-2">{msg.consequence.display}</div>
+                  <div className="text-[9px] text-gray-600">{msg.consequence.disclaimer}</div>
+                </div>
+              </div>
+            )}
             {msg.type === 'countdown' && (
               <div className="w-full">
                 <div className="rounded-lg p-4 my-2 border border-orange-500/20 bg-orange-500/5 text-center">

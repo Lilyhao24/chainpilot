@@ -20,7 +20,7 @@ const DIM_MAX = {
 
 export default function SafetyScoreCard({ result }) {
   const [expanded, setExpanded] = useState(false);
-  const { safetyScore, tokenName, tokenSymbol, gradeColor, mineSignals, slippage, riskTemplate } = result;
+  const { safetyScore, tokenName, tokenSymbol, gradeColor, mineSignals, slippage, riskTemplate, rephrasedRisk } = result;
   const isGood = safetyScore.grade === 'A' || safetyScore.grade === 'B';
   const borderColor = isGood ? '#00E676' : safetyScore.grade === 'C' ? '#D85A30' : '#FF1744';
 
@@ -123,10 +123,20 @@ export default function SafetyScoreCard({ result }) {
               </div>
             )}
 
-            {/* Risk description */}
-            {riskTemplate && (
+            {/* AI Risk Description — Gemini rephrased or original template */}
+            {(rephrasedRisk || riskTemplate) && (
               <div className="bg-white/[0.02] rounded p-2 text-gray-400 leading-relaxed">
-                {riskTemplate.zh}
+                {rephrasedRisk ? (
+                  <>
+                    <div className="text-[9px] text-cyan-500/60 mb-1 font-mechanical">AI 风险解读</div>
+                    <div className="text-[11px]">{rephrasedRisk}</div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-[9px] text-gray-600 mb-1 font-mechanical animate-pulse">AI 分析中...</div>
+                    <div className="text-[11px]">{riskTemplate.zh}</div>
+                  </>
+                )}
               </div>
             )}
 

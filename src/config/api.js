@@ -33,3 +33,23 @@ export async function getMarketData(address) {
   const res = await fetch(`${API_BASE}/api/coingecko?address=${address}`);
   return res.json();
 }
+
+export async function rephraseRisk(scanResult) {
+  try {
+    const res = await fetch(`${API_BASE}/api/rephrase`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        safetyScore: scanResult.safetyScore,
+        riskTemplate: scanResult.riskTemplate,
+        mineSignals: scanResult.mineSignals,
+        tokenSymbol: scanResult.tokenSymbol,
+        slippage: scanResult.slippage,
+      }),
+    });
+    const data = await res.json();
+    return data.rephrased || scanResult.riskTemplate.zh;
+  } catch {
+    return scanResult.riskTemplate.zh;
+  }
+}
