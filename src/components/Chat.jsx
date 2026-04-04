@@ -269,7 +269,7 @@ export default function Chat({ onScanComplete }) {
   }
 
   return (
-    <div className="w-1/3 min-w-[420px] border-l border-white/[0.06] flex flex-col bg-[#0D0D0D] relative">
+    <div className="w-1/2 min-w-[480px] border-l border-white/[0.08] flex flex-col relative" style={{ background: 'linear-gradient(180deg, #111118 0%, #0d0d14 100%)' }}>
       {/* Block Screen Overlay */}
       {blockScreen && (
         <BlockScreen result={blockScreen} onDismiss={() => setBlockScreen(null)} />
@@ -285,7 +285,7 @@ export default function Chat({ onScanComplete }) {
         </div>
         <button
           onClick={resetChat}
-          className="text-[10px] text-gray-500 hover:text-white border border-white/10 hover:border-white/30 px-2.5 py-1 rounded-lg transition-all font-mechanical"
+          className="text-sm text-gray-400 hover:text-white border border-white/10 hover:border-white/30 px-3 py-1.5 rounded-lg transition-all font-mechanical"
         >
           {t.newChat}
         </button>
