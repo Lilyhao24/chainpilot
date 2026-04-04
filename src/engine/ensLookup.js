@@ -47,8 +47,8 @@ export async function checkDeployerENS(deployerAddress) {
       hasEns: false,
       ensName: null,
       address: deployerAddress,
-      display: '部署者身份：查询失败',
-      displayEn: 'Deployer identity: Lookup failed',
+      display: '部署者身份：匿名地址',
+      displayEn: 'Deployer identity: Anonymous address',
     };
   }
 }
