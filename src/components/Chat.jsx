@@ -7,7 +7,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAccount } from 'wagmi';
 import { Shield } from 'lucide-react';
 import { runSecurityScan, simulateConsequence } from '../engine/index.js';
-import { chatWithAI, rephraseRisk } from '../config/api.js';
+import { chatWithAI, rephraseRisk, searchTokenAddress } from '../config/api.js';
 import SafetyScoreCard from './SafetyScoreCard.jsx';
 import SwapCard from './SwapCard.jsx';
 import ENSProfileCard from './ENSProfileCard.jsx';
@@ -114,6 +114,12 @@ function parseIntent(input) {
     return { type: 'safety_check', token: tokenName, address: TOKEN_ADDRESSES[tokenName] };
   }
 
+  // Short input that looks like a token name (1-10 chars, no spaces) → try CoinGecko lookup
+  const cleaned = text.replace(/[^a-z0-9]/g, '');
+  if (cleaned.length >= 1 && cleaned.length <= 10 && !text.includes(' ')) {
+    return { type: 'safety_check', token: input.trim().toUpperCase(), address: null };
+  }
+
   // General chat
   return { type: 'chat', message: input };
 }
@@ -195,11 +201,21 @@ export default function Chat({ onScanComplete }) {
 
       switch (intent.type) {
         case 'safety_check': {
+          // If no hardcoded address, search CoinGecko in real-time
           if (!intent.address) {
-            addMessage({ role: 'ai', type: 'text', content: `我不认识「${intent.token}」，请提供合约地址（0x...）。` });
-            break;
+            addMessage({ role: 'ai', type: 'text', content: lang === 'zh' ? `🔍 正在搜索 ${intent.token}...` : `🔍 Searching ${intent.token}...` });
+            const searchResult = await searchTokenAddress(intent.token);
+            if (!searchResult.address) {
+              replaceLastMessage({ role: 'ai', type: 'text', content: lang === 'zh'
+                ? `未找到「${intent.token}」的以太坊合约地址。请直接输入合约地址（0x...）进行扫描。`
+                : `Could not find Ethereum contract for "${intent.token}". Please enter the contract address (0x...) directly.`
+              });
+              break;
+            }
+            intent.address = searchResult.address;
+            intent.token = searchResult.symbol || intent.token;
           }
-          addMessage({ role: 'ai', type: 'text', content: `🔍 正在扫描 ${intent.token}...` });
+          addMessage({ role: 'ai', type: 'text', content: lang === 'zh' ? `🔍 正在扫描 ${intent.token}...` : `🔍 Scanning ${intent.token}...` });
 
           const result = await runSecurityScan(intent.address);
           replaceLastMessage({ role: 'ai', type: 'safety_card', result });
@@ -223,12 +239,26 @@ export default function Chat({ onScanComplete }) {
 
         case 'swap': {
           if (!isConnected) {
-            addMessage({ role: 'ai', type: 'text', content: '⚠️ 请先连接钱包。点击右上角的连接按钮。' });
+            addMessage({ role: 'ai', type: 'text', content: lang === 'zh' ? '⚠️ 请先连接钱包。点击右上角的连接按钮。' : '⚠️ Please connect your wallet first.' });
             break;
           }
-          addMessage({ role: 'ai', type: 'text', content: `🔍 交易前先检查 ${intent.token} 安全性...` });
+          // Resolve address via CoinGecko if not hardcoded
+          if (!intent.address) {
+            addMessage({ role: 'ai', type: 'text', content: lang === 'zh' ? `🔍 正在搜索 ${intent.token}...` : `🔍 Searching ${intent.token}...` });
+            const searchResult = await searchTokenAddress(intent.token);
+            if (!searchResult.address) {
+              replaceLastMessage({ role: 'ai', type: 'text', content: lang === 'zh'
+                ? `未找到「${intent.token}」的以太坊合约地址，无法交易。`
+                : `Could not find Ethereum contract for "${intent.token}".`
+              });
+              break;
+            }
+            intent.address = searchResult.address;
+            intent.token = searchResult.symbol || intent.token;
+          }
+          addMessage({ role: 'ai', type: 'text', content: lang === 'zh' ? `🔍 交易前先检查 ${intent.token} 安全性...` : `🔍 Checking ${intent.token} safety before swap...` });
 
-          if (intent.address) {
+          {
             const result = await runSecurityScan(intent.address);
             replaceLastMessage({ role: 'ai', type: 'safety_card', result });
             onScanComplete?.({ ...result.safetyScore, symbol: result.tokenSymbol });

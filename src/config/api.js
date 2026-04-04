@@ -34,6 +34,16 @@ export async function getMarketData(address) {
   return res.json();
 }
 
+export async function searchTokenAddress(query) {
+  try {
+    const res = await fetch(`${API_BASE}/api/token-search?query=${encodeURIComponent(query)}`);
+    const data = await res.json();
+    return data; // { address, name, symbol, id, market_cap }
+  } catch {
+    return { address: null };
+  }
+}
+
 export async function rephraseRisk(scanResult, lang = 'zh') {
   try {
     const res = await fetch(`${API_BASE}/api/rephrase`, {
