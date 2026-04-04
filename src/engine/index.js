@@ -7,6 +7,7 @@ import { calculateSafetyScore, GRADE_COLORS, DIMENSION_LABELS } from './safetySc
 import { runMineDetection } from './mineDetector.js';
 import { enforceRules, getSlippageConfig, simulateConsequence, getRiskTemplate } from './rules.js';
 import { checkTokenSecurity, getMarketData } from '../config/api.js';
+import { checkDeployerENS } from './ensLookup.js';
 
 /**
  * Full security scan for a token address
@@ -17,11 +18,15 @@ import { checkTokenSecurity, getMarketData } from '../config/api.js';
  * @returns {Object} Complete security analysis
  */
 export async function runSecurityScan(address, chainId = '1') {
-  // Step 1: Fetch data from both sources in parallel
+  // Step 1: Fetch data from all sources in parallel
   const [goplusData, coingeckoData] = await Promise.all([
     checkTokenSecurity(address, chainId),
     getMarketData(address),
   ]);
+
+  // Step 1b: Deployer ENS lookup (non-blocking, runs in parallel with processing)
+  const deployerAddress = goplusData.creator_address || goplusData.owner_address;
+  const deployerENSPromise = checkDeployerENS(deployerAddress);
 
   // Step 2: Calculate Safety Score (6 dimensions)
   const safetyScore = calculateSafetyScore(goplusData, coingeckoData.market_cap);
@@ -48,6 +53,9 @@ export async function runSecurityScan(address, chainId = '1') {
   // Step 6: Get risk description template
   const riskTemplate = getRiskTemplate(coingeckoData.market_cap);
 
+  // Step 7: Await deployer ENS result
+  const deployerENS = await deployerENSPromise;
+
   return {
     address,
     tokenName: goplusData.token_name || coingeckoData.name || 'Unknown',
@@ -58,6 +66,7 @@ export async function runSecurityScan(address, chainId = '1') {
     riskTemplate,
     gradeColor: GRADE_COLORS[safetyScore.grade],
     dimensionLabels: DIMENSION_LABELS,
+    deployerENS,
     marketCap: coingeckoData.market_cap,
     raw: { goplus: goplusData, coingecko: coingeckoData },
   };

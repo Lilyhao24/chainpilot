@@ -3,7 +3,7 @@
  * Richard Mille style: 4 gauge dials + gear decorations + metric cards + transactions
  */
 
-import { useAccount, useBalance } from 'wagmi';
+import { useAccount, useBalance, useEnsName, useEnsAvatar } from 'wagmi';
 import GaugeDial from './GaugeDial';
 
 const colorMap = {
@@ -109,8 +109,12 @@ const DEMO_TRANSACTIONS = [
 export default function Dashboard({ lastScan, scanCount = 0, blockCount = 0 }) {
   const { address, isConnected } = useAccount();
   const { data: balance } = useBalance({ address });
+  const { data: ensName } = useEnsName({ address });
+  const { data: ensAvatar } = useEnsAvatar({ name: ensName });
 
   const ethDisplay = balance ? `${parseFloat(balance.formatted).toFixed(3)} ETH` : '0 ETH';
+  const walletDisplay = ensName || (address ? `${address.slice(0,4)}...${address.slice(-3)}` : '—');
+  const walletSub = isConnected ? (ensName ? `${address?.slice(0,6)}...${address?.slice(-4)} · ${ethDisplay}` : ethDisplay) : 'Connect Wallet';
 
   return (
     <div className="flex-1 flex flex-col p-6 overflow-y-auto relative">
@@ -132,11 +136,11 @@ export default function Dashboard({ lastScan, scanCount = 0, blockCount = 0 }) {
           <div className="flex justify-center relative">
             <GaugeDial
               label="WALLET"
-              value={isConnected ? (address?.slice(0,4) + '...' + address?.slice(-3)) : '—'}
-              subValue={isConnected ? ethDisplay : 'Connect Wallet'}
+              value={isConnected ? walletDisplay : '—'}
+              subValue={walletSub}
               color="red"
               fillPercent={isConnected ? 75 : 10}
-              icon="👛"
+              icon={ensAvatar ? undefined : '👛'}
             />
           </div>
           <div className="flex justify-center relative">

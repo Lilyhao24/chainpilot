@@ -20,7 +20,7 @@ const DIM_MAX = {
 
 export default function SafetyScoreCard({ result }) {
   const [expanded, setExpanded] = useState(false);
-  const { safetyScore, tokenName, tokenSymbol, gradeColor, mineSignals, slippage, riskTemplate, rephrasedRisk } = result;
+  const { safetyScore, tokenName, tokenSymbol, gradeColor, mineSignals, slippage, riskTemplate, rephrasedRisk, deployerENS } = result;
   const isGood = safetyScore.grade === 'A' || safetyScore.grade === 'B';
   const borderColor = isGood ? '#00E676' : safetyScore.grade === 'C' ? '#D85A30' : '#FF1744';
 
@@ -147,11 +147,18 @@ export default function SafetyScoreCard({ result }) {
               </div>
             )}
 
-            {/* ENS deployer info */}
-            <div className="flex items-center gap-1 text-gray-500">
-              <span>✓</span>
-              <span>部署者身份：{safetyScore.grade === 'A' ? '已验证ENS' : '未验证'}</span>
-            </div>
+            {/* ENS deployer trust signal */}
+            {deployerENS && (
+              <div className={`flex items-center gap-1.5 ${deployerENS.hasEns ? 'text-green-400' : 'text-gray-500'}`}>
+                <span>{deployerENS.hasEns ? '✓' : '?'}</span>
+                <span>{deployerENS.display}</span>
+                {deployerENS.hasEns && (
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mechanical">
+                    ENS
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
