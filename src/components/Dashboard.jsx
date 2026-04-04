@@ -45,7 +45,7 @@ function MetricCard({ title, value, unit, change, color = 'red', positive = true
       <div className="relative z-10">
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-mechanical text-xs uppercase tracking-widest" style={{ color: 'var(--muted-foreground)', opacity: 0.7 }}>
+          <h3 className="font-mechanical text-sm uppercase tracking-widest text-gray-400">
             {title}
           </h3>
         </div>
@@ -54,11 +54,11 @@ function MetricCard({ title, value, unit, change, color = 'red', positive = true
           <div className="font-black text-2xl tracking-tight" style={{ color: c, textShadow: `0 0 10px ${c}60` }}>
             {value}
           </div>
-          {unit && <span className="text-xs" style={{ color: 'var(--muted-foreground)', opacity: 0.6 }}>{unit}</span>}
+          {unit && <span className="text-sm text-gray-500">{unit}</span>}
         </div>
         {/* Change Indicator */}
-        <div className="text-xs font-mechanical tracking-wider" style={{ color: trendColor }}>
-          {positive ? '↑ ' : '↓ '}{change}
+        <div className="text-sm font-mechanical tracking-wider" style={{ color: trendColor }}>
+          {positive ? '▲ ' : '▼ '}{change}
         </div>
       </div>
       {/* Accent Line */}
@@ -245,7 +245,7 @@ export default function Dashboard({ lastScan, scanCount = 0, blockCount = 0, sca
               >
                 <div className="flex items-center gap-3">
                   <span
-                    className={`font-mechanical text-[10px] font-bold px-2.5 py-1 rounded ${
+                    className={`font-mechanical text-xs font-bold px-2.5 py-1 rounded ${
                       tx.type === 'BUY'
                         ? 'bg-green-500/15 text-green-400'
                         : 'bg-red-500/15 text-red-400'
@@ -255,8 +255,8 @@ export default function Dashboard({ lastScan, scanCount = 0, blockCount = 0, sca
                   </span>
                   <span className="text-sm text-white font-medium">{tx.token}</span>
                 </div>
-                <div className="text-xs text-gray-400 font-mechanical">{tx.detail}</div>
-                <div className="text-[10px] text-gray-600 font-mechanical">{tx.time}</div>
+                <div className="text-sm text-gray-300 font-mechanical">{tx.detail}</div>
+                <div className="text-xs text-gray-500 font-mechanical">{tx.time}</div>
               </div>
             ))}
           </div>

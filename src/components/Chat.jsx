@@ -296,8 +296,8 @@ export default function Chat({ onScanComplete }) {
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             {msg.type === 'text' && (
-              <div className={`max-w-[90%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap ${
-                msg.role === 'user' ? 'bg-[#2A2A2A] text-white' : 'bg-transparent text-gray-300'
+              <div className={`max-w-[90%] rounded-2xl px-4 py-2.5 text-base leading-relaxed whitespace-pre-wrap ${
+                msg.role === 'user' ? 'bg-primary text-white rounded-br-sm' : 'bg-transparent text-gray-200'
               }`}>
                 {msg.content}
               </div>
@@ -348,7 +348,7 @@ export default function Chat({ onScanComplete }) {
               <button
                 key={qa.label}
                 onClick={() => handleSend(qa.action)}
-                className="text-[11px] px-3 py-1.5 rounded-full border border-white/10 text-gray-400 hover:text-white hover:border-white/30 hover:bg-white/5 transition-all animate-slide-up"
+                className="text-sm px-4 py-2 rounded-full border border-white/10 text-gray-300 hover:text-white hover:border-white/30 hover:bg-white/5 transition-all animate-slide-up font-medium"
                 style={{ animationDelay: `${i * 0.08}s` }}
               >
                 {qa.label}
@@ -387,7 +387,7 @@ export default function Chat({ onScanComplete }) {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={t.inputPlaceholder}
-            className="flex-1 bg-transparent text-sm text-white placeholder-gray-600 outline-none"
+            className="flex-1 bg-transparent text-base text-white placeholder-gray-500 outline-none py-2"
             disabled={loading}
           />
           <button

@@ -324,16 +324,16 @@ export default function GaugeDial({
             )}
           </div>
           {subValue && (
-            <div className="font-mechanical text-xs text-gray-400 mt-1 text-center max-w-[140px] opacity-70">
+            <div className="font-mechanical text-sm text-gray-300 mt-1 text-center max-w-[140px]">
               {subValue}
             </div>
           )}
         </div>
       </div>
 
-      {/* Label (Manus style) */}
+      {/* Label (Manus: text-sm, bolder) */}
       <div className="mt-4 text-center">
-        <div className="font-mechanical text-xs uppercase tracking-widest" style={{ color: 'var(--muted-foreground)', opacity: 0.7 }}>
+        <div className="font-mechanical text-sm font-medium uppercase tracking-widest text-gray-400">
           {label}
         </div>
       </div>
