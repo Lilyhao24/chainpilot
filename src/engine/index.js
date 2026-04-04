@@ -39,12 +39,38 @@ export async function runSecurityScan(address, chainId = '1') {
     safetyScore.grade
   );
 
-  // Step 4: Check if any mine signal triggers a block
-  const hasBlock = Object.values(mineSignals).some((s) => s.level === 'block');
-  // If mine detector blocks, override grade to F
+  // Step 4: Mine signals affect score and grade
+  const signals = Object.values(mineSignals);
+  const hasBlock = signals.some((s) => s.level === 'block');
+  const warnCount = signals.filter((s) => s.level === 'warn' || s.level === 'warn_high').length;
+
+  // Block-level signal → force F
   if (hasBlock && safetyScore.grade !== 'F') {
     safetyScore.grade = 'F';
     safetyScore.forceF = true;
+  }
+
+  // Warn-level signals penalize score: -10 per warning
+  if (warnCount > 0) {
+    const penalty = warnCount * 10;
+    safetyScore.total = Math.max(0, safetyScore.total - penalty);
+    safetyScore.warnPenalty = penalty;
+
+    // Recalculate grade from adjusted total
+    if (!safetyScore.forceF) {
+      if (safetyScore.total >= 80) safetyScore.grade = 'A';
+      else if (safetyScore.total >= 60) safetyScore.grade = 'B';
+      else if (safetyScore.total >= 40) safetyScore.grade = 'C';
+      else safetyScore.grade = 'F';
+    }
+
+    // 2+ warnings → downgrade one extra level (but never to F — only block signals force F)
+    if (warnCount >= 2 && !safetyScore.forceF) {
+      const downgrade = { A: 'B', B: 'C' };
+      if (downgrade[safetyScore.grade]) {
+        safetyScore.grade = downgrade[safetyScore.grade];
+      }
+    }
   }
 
   // Step 5: Get slippage config
