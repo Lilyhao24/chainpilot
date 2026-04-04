@@ -149,7 +149,7 @@ export default function Dashboard({ lastScan, scanCount = 0, blockCount = 0, sca
 
       <div className="relative z-10">
         {/* 4 Gauge Dials */}
-        <div className="grid grid-cols-4 gap-6 mb-4">
+        <div className="grid grid-cols-4 gap-6 mb-4" style={{ animation: 'fadeIn 0.6s ease-out' }}>
           <div className="flex justify-center relative">
             <GaugeDial
               label="WALLET"
@@ -244,8 +244,10 @@ export default function Dashboard({ lastScan, scanCount = 0, blockCount = 0, sca
 
         {/* 4 Info Cards */}
         <div className="grid grid-cols-4 gap-3 mb-6">
-          {INFO_CARDS.map((card) => (
-            <MetricCard key={card.title} {...card} />
+          {INFO_CARDS.map((card, i) => (
+            <div key={card.title} className="animate-slide-up" style={{ animationDelay: `${0.1 + i * 0.06}s` }}>
+              <MetricCard {...card} />
+            </div>
           ))}
         </div>
 

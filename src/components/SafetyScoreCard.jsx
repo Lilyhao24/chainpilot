@@ -55,12 +55,12 @@ export default function SafetyScoreCard({ result }) {
 
       {/* 6 Dimension Bars */}
       <div className="px-4 py-2 space-y-2">
-        {Object.entries(safetyScore.scores).map(([key, score]) => {
+        {Object.entries(safetyScore.scores).map(([key, score], idx) => {
           const max = DIM_MAX[key];
           const pct = (score / max) * 100;
           const barColor = pct >= 80 ? '#00E676' : pct >= 50 ? '#FFD600' : '#FF1744';
           return (
-            <div key={key} className="flex items-center gap-2">
+            <div key={key} className="flex items-center gap-2 animate-slide-up" style={{ animationDelay: `${idx * 0.06}s` }}>
               <span className="text-[10px] text-gray-400 w-16 truncate font-mechanical">
                 {DIM_LABELS[key].zh}
               </span>

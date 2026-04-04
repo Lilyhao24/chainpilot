@@ -66,8 +66,16 @@ export default function ENSProfileCard({ name }) {
   if (loading) {
     return (
       <div className="rounded-lg p-4 my-2 border border-purple-500/20 bg-purple-500/5">
-        <div className="text-sm text-gray-400 animate-pulse font-mechanical">
-          🔗 正在查询 {name}...
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+          <span className="text-xs text-gray-500 font-mechanical">查询 {name}...</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="skeleton w-14 h-14 rounded-full" />
+          <div className="flex-1 space-y-2">
+            <div className="skeleton h-4 w-32" />
+            <div className="skeleton h-3 w-48" />
+          </div>
         </div>
       </div>
     );

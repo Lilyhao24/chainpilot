@@ -280,11 +280,11 @@ export default function Chat({ onScanComplete }) {
                 {msg.content}
               </div>
             )}
-            {msg.type === 'safety_card' && <div className="w-full"><SafetyScoreCard result={msg.result} /></div>}
-            {msg.type === 'swap_card' && <div className="w-full"><SwapCard token={msg.token} amount={msg.amount} slippage={msg.slippage} /></div>}
-            {msg.type === 'ens_card' && <div className="w-full"><ENSProfileCard name={msg.name} /></div>}
+            {msg.type === 'safety_card' && <div className="w-full animate-slide-up"><SafetyScoreCard result={msg.result} /></div>}
+            {msg.type === 'swap_card' && <div className="w-full animate-slide-up"><SwapCard token={msg.token} amount={msg.amount} slippage={msg.slippage} /></div>}
+            {msg.type === 'ens_card' && <div className="w-full animate-slide-up"><ENSProfileCard name={msg.name} /></div>}
             {msg.type === 'consequence' && (
-              <div className="w-full">
+              <div className="w-full animate-slide-up">
                 <div
                   className="rounded-lg p-4 my-2"
                   style={{
@@ -301,7 +301,7 @@ export default function Chat({ onScanComplete }) {
               </div>
             )}
             {msg.type === 'countdown' && (
-              <div className="w-full">
+              <div className="w-full animate-slide-up">
                 <div className="rounded-lg p-4 my-2 border border-orange-500/20 bg-orange-500/5 text-center">
                   <div className="text-xs text-orange-400 mb-2 font-mechanical">⏱ 冷却期 — 请等待倒计时结束后确认交易</div>
                   <CountdownTimer
@@ -322,11 +322,12 @@ export default function Chat({ onScanComplete }) {
 
         {showQuickActions && !loading && (
           <div className="flex flex-wrap gap-2 mt-2">
-            {QUICK_ACTIONS.map((qa) => (
+            {QUICK_ACTIONS.map((qa, i) => (
               <button
                 key={qa.label}
                 onClick={() => handleSend(qa.action)}
-                className="text-[11px] px-3 py-1.5 rounded-full border border-white/10 text-gray-400 hover:text-white hover:border-white/30 hover:bg-white/5 transition-all"
+                className="text-[11px] px-3 py-1.5 rounded-full border border-white/10 text-gray-400 hover:text-white hover:border-white/30 hover:bg-white/5 transition-all animate-slide-up"
+                style={{ animationDelay: `${i * 0.08}s` }}
               >
                 {qa.label}
               </button>
@@ -335,10 +336,20 @@ export default function Chat({ onScanComplete }) {
         )}
 
         {loading && (
-          <div className="flex justify-start">
-            <div className="text-sm text-gray-500 flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-              分析中...
+          <div className="flex justify-start w-full">
+            <div className="w-full rounded-lg p-4 space-y-3" style={{ border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(26,26,26,0.5)' }}>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                <span className="text-xs text-gray-500 font-mechanical">扫描中...</span>
+              </div>
+              <div className="skeleton h-3 w-3/4" />
+              <div className="skeleton h-3 w-1/2" />
+              <div className="skeleton h-8 w-full mt-2" />
+              <div className="flex gap-2 mt-2">
+                <div className="skeleton h-2.5 w-16" />
+                <div className="skeleton h-2.5 w-20" />
+                <div className="skeleton h-2.5 w-14" />
+              </div>
             </div>
           </div>
         )}
@@ -347,7 +358,7 @@ export default function Chat({ onScanComplete }) {
 
       {/* Input */}
       <div className="p-3 border-t border-white/[0.06]">
-        <div className="flex items-center gap-2 bg-[#1A1A1A] rounded-lg px-3 py-2 border border-white/[0.04]">
+        <div className="flex items-center gap-2 bg-[#1A1A1A] rounded-lg px-3 py-2 border border-white/[0.06] focus-within:border-[#ff1744]/30 focus-within:shadow-[0_0_12px_rgba(255,23,68,0.1)] transition-all duration-300">
           <input
             type="text"
             value={input}
