@@ -41,7 +41,7 @@ function gradeStyles(grade) {
 export default function SafetyScoreCard({ result }) {
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const { safetyScore, tokenName, tokenSymbol, gradeColor, mineSignals, slippage, riskTemplate, rephrasedRisk, deployerENS, address } = result;
   const isDanger = safetyScore.grade === 'F';
   const gs = gradeStyles(safetyScore.grade);
@@ -155,7 +155,7 @@ export default function SafetyScoreCard({ result }) {
                   {isOk ? <Check className="w-3 h-3 text-safe" /> :
                    isBlock ? <X className="w-3 h-3 text-danger" /> :
                    <AlertTriangle className="w-3 h-3 text-warn" />}
-                  <span className={isOk ? 'text-safe' : isBlock ? 'text-danger' : 'text-warn'}>{signal.reason}</span>
+                  <span className={isOk ? 'text-safe' : isBlock ? 'text-danger' : 'text-warn'}>{lang === 'en' && signal.reasonEn ? signal.reasonEn : signal.reason}</span>
                 </div>
               );
             })}
@@ -166,7 +166,7 @@ export default function SafetyScoreCard({ result }) {
         {deployerENS && (
           <div className="mt-3 flex items-center gap-1.5 text-[11px]">
             {deployerENS.hasEns ? <Check className="w-3 h-3 text-safe" /> : <AlertTriangle className="w-3 h-3 text-gray-500" />}
-            <span className={deployerENS.hasEns ? 'text-safe' : 'text-gray-500'}>{deployerENS.display}</span>
+            <span className={deployerENS.hasEns ? 'text-safe' : 'text-gray-500'}>{lang === 'en' && deployerENS.displayEn ? deployerENS.displayEn : deployerENS.display}</span>
             {deployerENS.hasEns && (
               <span className="text-[9px] px-1.5 py-0.5 rounded text-purple-300 font-mechanical" style={{ background: 'rgba(168,85,247,0.15)' }}>
                 ENS
