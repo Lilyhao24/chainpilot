@@ -247,7 +247,7 @@ export default function Chat({ onScanComplete }) {
   }
 
   return (
-    <div className="w-[380px] min-w-[380px] border-l border-white/[0.06] flex flex-col bg-[#0D0D0D] relative">
+    <div className="w-1/3 min-w-[420px] border-l border-white/[0.06] flex flex-col bg-[#0D0D0D] relative">
       {/* Block Screen Overlay */}
       {blockScreen && (
         <BlockScreen result={blockScreen} onDismiss={() => setBlockScreen(null)} />

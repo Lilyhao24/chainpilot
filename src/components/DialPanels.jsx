@@ -188,10 +188,11 @@ function SecurityPanel({ settings, onSettingsChange }) {
               value={settings.cooldownC}
               onChange={(e) => {
                 const v = Number(e.target.value);
-                onSettingsChange({ ...settings, cooldownC: v, cooldownB: Math.round(v * 0.6) });
+                onSettingsChange({ ...settings, cooldownC: v, cooldownB: v === 0 ? 0 : Math.round(v * 0.6) });
               }}
               className="bg-[#1A1A1A] border border-white/10 rounded px-2 py-1 text-[10px] text-white font-mechanical"
             >
+              <option value={0}>不冷却</option>
               <option value={120}>2分钟</option>
               <option value={180}>3分钟</option>
               <option value={300}>5分钟（默认）</option>
@@ -320,23 +321,42 @@ function Sparkline({ data, color, width = 80, height = 30 }) {
   );
 }
 
-// Demo 7-day price data for sparklines
+// Demo 7-day + 30-day price data
 const MARKET_DATA = [
-  { symbol: 'ETH', name: 'Ethereum', price: '2,845', change: '+2.1%', positive: true, spark: [2700, 2750, 2780, 2810, 2790, 2830, 2845] },
-  { symbol: 'BTC', name: 'Bitcoin', price: '45,230', change: '+3.2%', positive: true, spark: [43800, 44100, 44500, 44200, 44800, 45100, 45230] },
-  { symbol: 'USDC', name: 'USD Coin', price: '1.00', change: '0.0%', positive: true, spark: [1, 1, 1, 1, 1, 1, 1] },
-  { symbol: 'PEPE', name: 'Pepe', price: '0.0000125', change: '+15.3%', positive: true, spark: [80, 85, 90, 95, 100, 110, 125] },
-  { symbol: 'UNI', name: 'Uniswap', price: '14.23', change: '-1.2%', positive: false, spark: [14.8, 14.6, 14.5, 14.3, 14.1, 14.0, 14.23] },
-  { symbol: 'LINK', name: 'Chainlink', price: '16.74', change: '+0.8%', positive: true, spark: [16.2, 16.3, 16.5, 16.4, 16.6, 16.7, 16.74] },
+  { symbol: 'ETH', name: 'Ethereum', price: '2,845', change: '+2.1%', positive: true,
+    spark: [2700, 2750, 2780, 2810, 2790, 2830, 2845],
+    spark30: [2400, 2450, 2500, 2480, 2550, 2600, 2580, 2620, 2650, 2630, 2680, 2700, 2720, 2690, 2710, 2750, 2730, 2760, 2780, 2770, 2790, 2800, 2780, 2810, 2790, 2820, 2830, 2810, 2840, 2845],
+    high: '2,920', low: '2,380', vol: '$18.2B', mcap: '$342B' },
+  { symbol: 'BTC', name: 'Bitcoin', price: '45,230', change: '+3.2%', positive: true,
+    spark: [43800, 44100, 44500, 44200, 44800, 45100, 45230],
+    spark30: [41000, 41500, 42000, 41800, 42500, 43000, 42800, 43200, 43500, 43300, 43800, 44000, 44200, 43900, 44100, 44500, 44300, 44600, 44800, 44700, 44900, 45000, 44800, 45100, 44900, 45200, 45300, 45100, 45200, 45230],
+    high: '46,800', low: '40,200', vol: '$32.1B', mcap: '$886B' },
+  { symbol: 'USDC', name: 'USD Coin', price: '1.00', change: '0.0%', positive: true,
+    spark: [1, 1, 1, 1, 1, 1, 1], spark30: Array(30).fill(1),
+    high: '1.001', low: '0.999', vol: '$5.8B', mcap: '$32.5B' },
+  { symbol: 'PEPE', name: 'Pepe', price: '0.0000125', change: '+15.3%', positive: true,
+    spark: [80, 85, 90, 95, 100, 110, 125],
+    spark30: [50, 55, 52, 58, 62, 60, 65, 70, 68, 72, 75, 73, 78, 80, 82, 79, 85, 88, 86, 90, 92, 95, 93, 98, 100, 105, 108, 112, 118, 125],
+    high: '0.0000142', low: '0.0000062', vol: '$1.2B', mcap: '$5.2B' },
+  { symbol: 'UNI', name: 'Uniswap', price: '14.23', change: '-1.2%', positive: false,
+    spark: [14.8, 14.6, 14.5, 14.3, 14.1, 14.0, 14.23],
+    spark30: [15.5, 15.3, 15.1, 15.4, 15.2, 15.0, 14.8, 14.9, 14.7, 14.6, 14.8, 14.5, 14.6, 14.4, 14.5, 14.3, 14.4, 14.2, 14.3, 14.1, 14.2, 14.0, 14.1, 13.9, 14.0, 14.1, 14.0, 14.1, 14.2, 14.23],
+    high: '15.80', low: '13.60', vol: '$280M', mcap: '$8.5B' },
+  { symbol: 'LINK', name: 'Chainlink', price: '16.74', change: '+0.8%', positive: true,
+    spark: [16.2, 16.3, 16.5, 16.4, 16.6, 16.7, 16.74],
+    spark30: [15.0, 15.2, 15.4, 15.3, 15.5, 15.7, 15.6, 15.8, 16.0, 15.9, 16.1, 16.0, 16.2, 16.1, 16.3, 16.2, 16.4, 16.3, 16.5, 16.4, 16.6, 16.5, 16.7, 16.6, 16.5, 16.6, 16.7, 16.6, 16.7, 16.74],
+    high: '17.20', low: '14.80', vol: '$420M', mcap: '$10.1B' },
 ];
 
 function MarketPanel() {
   const [tokens, setTokens] = useState(MARKET_DATA);
   const [addInput, setAddInput] = useState('');
   const [showAdd, setShowAdd] = useState(false);
+  const [expandedToken, setExpandedToken] = useState(null);
 
   const removeToken = (symbol) => {
     setTokens(prev => prev.filter(t => t.symbol !== symbol));
+    if (expandedToken === symbol) setExpandedToken(null);
   };
 
   const addToken = () => {
@@ -349,6 +369,8 @@ function MarketPanel() {
     setTokens(prev => [...prev, {
       symbol: name, name: name, price: '—', change: '—', positive: true,
       spark: [50, 52, 48, 55, 53, 57, 56],
+      spark30: Array.from({ length: 30 }, (_, i) => 50 + Math.sin(i / 3) * 10),
+      high: '—', low: '—', vol: '—', mcap: '—',
     }]);
     setAddInput('');
     setShowAdd(false);
@@ -356,7 +378,7 @@ function MarketPanel() {
 
   return (
     <div className="p-4">
-      {/* Header with Add button */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="font-mechanical text-[10px] text-gray-400 tracking-[0.15em] uppercase">关注列表</div>
         <button
@@ -367,22 +389,17 @@ function MarketPanel() {
         </button>
       </div>
 
-      {/* Add input */}
       {showAdd && (
         <div className="flex gap-2 mb-3">
           <input
-            type="text"
-            value={addInput}
+            type="text" value={addInput}
             onChange={(e) => setAddInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && addToken()}
             placeholder="输入代币符号（如 AAVE）"
             className="flex-1 bg-[#1A1A1A] border border-white/10 rounded px-3 py-1.5 text-xs text-white placeholder-gray-600 outline-none focus:border-cyan-500/50 font-mechanical"
             autoFocus
           />
-          <button
-            onClick={addToken}
-            className="px-3 py-1.5 rounded bg-cyan-500/20 text-cyan-400 text-xs font-mechanical hover:bg-cyan-500/30 transition-colors"
-          >
+          <button onClick={addToken} className="px-3 py-1.5 rounded bg-cyan-500/20 text-cyan-400 text-xs font-mechanical hover:bg-cyan-500/30 transition-colors">
             添加
           </button>
         </div>
@@ -391,31 +408,61 @@ function MarketPanel() {
       {/* Token List */}
       <div className="space-y-0.5">
         {tokens.map(token => (
-          <div key={token.symbol} className="flex items-center justify-between py-2.5 border-b border-white/[0.04] last:border-0 group">
-            <div className="flex items-center gap-3 w-24">
-              <div>
-                <div className="text-xs text-white font-mechanical font-bold">{token.symbol}</div>
-                <div className="text-[9px] text-gray-600">{token.name}</div>
-              </div>
-            </div>
-
-            {/* Sparkline */}
-            <Sparkline data={token.spark} color={token.positive ? '#00E676' : '#FF1744'} />
-
-            <div className="text-right w-28">
-              <div className="text-xs text-white font-mechanical">${token.price}</div>
-              <div className={`text-[10px] font-mechanical ${token.positive ? 'text-green-400' : 'text-red-400'}`}>
-                {token.positive ? '▲' : '▼'} {token.change}
-              </div>
-            </div>
-
-            {/* Remove button on hover */}
-            <button
-              onClick={() => removeToken(token.symbol)}
-              className="opacity-0 group-hover:opacity-100 text-gray-600 hover:text-red-400 text-xs ml-2 transition-opacity"
+          <div key={token.symbol}>
+            <div
+              className="flex items-center justify-between py-2.5 border-b border-white/[0.04] group cursor-pointer hover:bg-white/[0.02] rounded px-1 transition-colors"
+              onClick={() => setExpandedToken(expandedToken === token.symbol ? null : token.symbol)}
             >
-              ✕
-            </button>
+              <div className="flex items-center gap-3 w-24">
+                <div>
+                  <div className="text-xs text-white font-mechanical font-bold">{token.symbol}</div>
+                  <div className="text-[9px] text-gray-600">{token.name}</div>
+                </div>
+              </div>
+              <Sparkline data={token.spark} color={token.positive ? '#00E676' : '#FF1744'} />
+              <div className="text-right w-28">
+                <div className="text-xs text-white font-mechanical">${token.price}</div>
+                <div className={`text-[10px] font-mechanical ${token.positive ? 'text-green-400' : 'text-red-400'}`}>
+                  {token.positive ? '▲' : '▼'} {token.change}
+                </div>
+              </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); removeToken(token.symbol); }}
+                className="opacity-0 group-hover:opacity-100 text-gray-600 hover:text-red-400 text-xs ml-2 transition-opacity"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Expanded Large Chart */}
+            {expandedToken === token.symbol && (
+              <div className="px-2 py-3 bg-white/[0.02] rounded-b mb-1" style={{ animation: 'fadeIn 0.3s ease-out' }}>
+                {/* 30-day chart */}
+                <div className="mb-3">
+                  <div className="text-[9px] text-gray-500 font-mechanical mb-1">30天价格走势</div>
+                  <Sparkline data={token.spark30} color={token.positive ? '#00E676' : '#FF1744'} width={500} height={80} />
+                </div>
+                {/* Market stats */}
+                <div className="grid grid-cols-4 gap-3">
+                  <div>
+                    <div className="text-[9px] text-gray-600 font-mechanical">24h最高</div>
+                    <div className="text-[11px] text-white font-mechanical">${token.high}</div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] text-gray-600 font-mechanical">24h最低</div>
+                    <div className="text-[11px] text-white font-mechanical">${token.low}</div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] text-gray-600 font-mechanical">24h成交量</div>
+                    <div className="text-[11px] text-white font-mechanical">{token.vol}</div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] text-gray-600 font-mechanical">市值</div>
+                    <div className="text-[11px] text-white font-mechanical">{token.mcap}</div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>
