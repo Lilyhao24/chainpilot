@@ -8,15 +8,22 @@ export function calculateSafetyScore(goplusData, marketCap) {
   let forceF = false;
 
   // 1. Honeypot Detection (30 pts)
+  // GoPlus is_honeypot + our own heuristic: empty sell_tax with valid buy_tax = likely honeypot
   const isHoneypot = goplusData.is_honeypot === '1';
-  scores.honeypot = isHoneypot ? 0 : 30;
-  if (isHoneypot) forceF = true;
+  const sellTaxRaw = goplusData.sell_tax;
+  const buyTaxRaw = goplusData.buy_tax;
+  const sellSimFailed = (sellTaxRaw === '' || sellTaxRaw === undefined || sellTaxRaw === null)
+    && (buyTaxRaw !== '' && buyTaxRaw !== undefined && buyTaxRaw !== null);
+  const honeypotDetected = isHoneypot || sellSimFailed;
+  scores.honeypot = honeypotDetected ? 0 : 30;
+  if (honeypotDetected) forceF = true;
 
   // 2. Buy/Sell Tax (15 pts)
-  const buyTax = parseFloat(goplusData.buy_tax || '0');
-  const sellTax = parseFloat(goplusData.sell_tax || '0');
+  const buyTax = parseFloat(buyTaxRaw || '0');
+  const sellTax = parseFloat(sellTaxRaw || '0');
   const maxTax = Math.max(buyTax, sellTax) * 100; // Convert to percentage
-  if (maxTax < 5) scores.tax = 15;
+  if (sellSimFailed) scores.tax = 0; // Can't sell = worst tax scenario
+  else if (maxTax < 5) scores.tax = 15;
   else if (maxTax <= 10) scores.tax = 8;
   else scores.tax = 0;
 
@@ -61,7 +68,7 @@ export function calculateSafetyScore(goplusData, marketCap) {
   else if (total >= 40) grade = 'C';
   else grade = 'F';
 
-  return { total, grade, scores, forceF, isHoneypot };
+  return { total, grade, scores, forceF, isHoneypot: honeypotDetected, sellSimFailed };
 }
 
 // Grade color mapping for UI
