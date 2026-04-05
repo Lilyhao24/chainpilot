@@ -229,7 +229,7 @@ const translations = {
 };
 
 export function LanguageProvider({ children }) {
-  const [lang, setLang] = useState('zh');
+  const [lang, setLang] = useState('en');
   const t = translations[lang];
   const toggleLang = () => setLang((l) => (l === 'zh' ? 'en' : 'zh'));
 
